@@ -1,0 +1,20 @@
+{
+  "checks": [
+    {
+      "name": "diagrams",
+      "run": "forge diagrams"
+    },
+    {
+      "name": "test",
+      "run": "./gradlew :app:testDebugUnitTest"
+    },
+    {
+      "name": "lint",
+      "run": "./gradlew :app:lintDebug"
+    },
+    {
+      "name": "format",
+      "run": "./gradlew spotlessCheck"
+    }
+  ]
+}

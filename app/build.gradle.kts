@@ -30,6 +30,26 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
+        warningsAsErrors = true
+        checkDependencies = true
+        // These depend on upstream releases, not on this code, so they would fail the check without a code change.
+        disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
+    }
+}
+
+dependencyLocking {
+    lockAllConfigurations()
+}
+
+// Acceptance tests run only through the acceptance run, which sets -Pacceptance.
+val runAcceptanceTests = providers.gradleProperty("acceptance").isPresent
+tasks.withType<Test>().configureEach {
+    if (!runAcceptanceTests) {
+        exclude("**/acceptance/**")
+    }
 }
 
 dependencies {
