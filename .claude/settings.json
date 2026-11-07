@@ -1,0 +1,5 @@
+{
+  "enabledPlugins": {
+    "forge-pipeline@forge-pipeline": true
+  }
+}
