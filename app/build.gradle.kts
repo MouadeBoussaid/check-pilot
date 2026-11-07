@@ -44,6 +44,12 @@ dependencyLocking {
     lockAllConfigurations()
 }
 
+// Android Lint's own runtime is build tooling, pinned through AGP, and never ships in the app.
+// Leaving it unlocked keeps the dependency scan on the app's own dependencies.
+configurations.matching { it.name == "androidLintTool" }.configureEach {
+    resolutionStrategy.deactivateDependencyLocking()
+}
+
 // Acceptance tests run only through the acceptance run, which sets -Pacceptance.
 val runAcceptanceTests = providers.gradleProperty("acceptance").isPresent
 tasks.withType<Test>().configureEach {
