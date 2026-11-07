@@ -50,14 +50,6 @@ configurations.matching { it.name == "androidLintTool" }.configureEach {
     resolutionStrategy.deactivateDependencyLocking()
 }
 
-// Acceptance tests run only through the acceptance run, which sets -Pacceptance.
-val runAcceptanceTests = providers.gradleProperty("acceptance").isPresent
-tasks.withType<Test>().configureEach {
-    if (!runAcceptanceTests) {
-        exclude("**/acceptance/**")
-    }
-}
-
 dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)

@@ -2,5 +2,5 @@
   "files": [
     "app/src/test/**/acceptance/**"
   ],
-  "run": "./gradlew :app:testDebugUnitTest -Pacceptance --tests '*.{name}' --tests '*.{name}_*'"
+  "run": "./gradlew :app:testDebugUnitTest --tests '*.{name}' --tests '*.{name}_*'"
 }
