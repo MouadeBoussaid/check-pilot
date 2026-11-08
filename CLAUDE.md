@@ -25,8 +25,8 @@ Layered MVVM, packages `com.mebiad.checkpilot.<layer>.<feature>` under `app/src/
 
 ```
 domain/       — use cases, business logic, interfaces
-data/local    — SharedPreferences, local storage
-ui/apps/      — feature screens (Activities + Composables + ViewModels)
+data/local    — Room database (SQLCipher-encrypted), DataStore settings, bundled assets
+ui/apps/      — feature screens (Composables + ViewModels; one Activity, Navigation Compose)
 ui/generic/   — shared scaffold, reusable components, theme
 di/           — Koin module definitions
 core/         — logging and other cross-cutting code
@@ -34,7 +34,7 @@ core/         — logging and other cross-cutting code
 
 - Interface + `Impl` for repositories, use cases and services.
 - Use cases own a `CoroutineScope` with `SupervisorJob` + an injected `CoroutineDispatcher` (default `Dispatchers.IO`).
-- ViewModels expose `StateFlow` / `SharedFlow`; Activities collect in `repeatOnLifecycle`. No LiveData in new code.
+- ViewModels expose `StateFlow` / `SharedFlow`; screens collect with `collectAsStateWithLifecycle()`. No LiveData in new code.
 - Async results are wrapped in `AsyncResult<T>` (`Idle`, `Loading`, `Success`, `Error`).
 
 ## Knowledge base

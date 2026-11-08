@@ -1,6 +1,6 @@
-# Check Pilot — Design Document (v0.2, Android-first)
+# Check Pilot — Design Document (v0.3, Android-first)
 
-> Status: Draft, reviewed with owner feedback · Date: 2026-11-06
+> Status: Draft, reviewed with owner feedback · Date: 2026-11-06 · Stack and scope decisions: 2026-11-08 (see Section 14, D18–D27)
 > Scope of this version: concept, domain research, functional spec, data model, UX flow, Android tech options, risks, and suggestions. Open questions are collected at the end (Section 14) with options, to be answered later.
 
 ---
@@ -157,7 +157,7 @@ Communication
 
 ### 5.5 Save report
 - Explicit save of the current state (separate from the automatic save in G1).
-- Saved sessions are listed on a home screen (date, route, CM1/CM2) and can be reopened/edited, duplicated, exported, or deleted.
+- Saved sessions are listed on a home screen (date, route, CM1/CM2) and can be reopened/edited, duplicated, or deleted. Export comes after the MVP (see Section 11).
 - The home screen has a **Load report** button to retrieve a previous report (opens the saved-reports list; selecting one reopens it, either in the capture view for editing or directly in the debrief view).
 
 ---
@@ -271,7 +271,8 @@ Home ──► [New session] ──► Setup ──► Competency list / capture
 Session
   id, createdAt, updatedAt, date (editable, defaults today),
   cm1StaffNo, cm2StaffNo, departureCode, destinationCode,
-  status: DRAFT | DEBRIEFED | SAVED
+  catalogueVersion,
+  status: DRAFT | DEBRIEFED | SAVED   (meaning still open, see D27)
 
 Note
   id, sessionId, competencyId, text,
@@ -281,16 +282,16 @@ Note
 Grade
   sessionId, competencyId, crewMember: CM1 | CM2, value (nullable → unset)
 
-Competency (static catalogue)    : id, code, name, orderIndex
-ObservableBehaviour (static)     : id, competencyId, text, orderIndex
-GradingScale (static/configurable): id, label, orderIndex
-CatalogueVersion                 : version, source, importedAt
+Catalogue (bundled JSON asset, read into memory, not stored in Room — see 9.2b):
+  version, labels, competencies[ id, name, observableBehaviours[ id, name ] ], gradingScale[ label ]
+  Order = array order; no separate code or orderIndex fields.
 ```
 
 Key rules:
 - `Note.obId` must belong to `Note.competencyId`; on move → `obId = null`.
 - Trailing empty field is **UI state only** (not persisted as a row) — avoids junk rows.
 - Store the **catalogue version** in each session so old sessions render correctly after OB updates.
+- Sessions, notes and grades live in Room; they reference catalogue entries by `id` only.
 - Grades are per CM (the concept's debrief is per CM).
 
 ### 8.2 Airport codes
@@ -311,7 +312,7 @@ sort by: notes desc, obs desc, originalOrder asc   // stable sort
 ## 9. Content management
 
 ### 9.1 Competency & OB catalogue
-- Ship as a **versioned JSON asset** bundled in the app; loaded into the database on first run/upgrade.
+- Ship as a **versioned JSON asset** bundled in the app; read into memory at startup (not copied into the database).
 - Lets the owner correct wording or switch to the operator's own OB set without touching code.
 
 ### 9.2 Example (shape only — illustrative, **not** an official list)
@@ -417,14 +418,14 @@ The app has no built-in aviation knowledge; all names are data and can be rename
 
 ### 10.2 Recommended stack (Option A)
 - **Language/UI:** Kotlin, Jetpack Compose, Material 3, adaptive layouts (phone + tablet).
-- **Architecture:** MVVM / unidirectional data flow; single-activity, Navigation Compose.
-- **Persistence:** Room (SQLite). Optional encryption at rest via SQLCipher or Android Keystore-backed encrypted storage (see Section 12).
-- **Settings:** Jetpack DataStore.
-- **DI:** Hilt (or manual DI for a small app).
+- **Architecture:** MVVM / unidirectional data flow; single activity, Navigation Compose; screens collect ViewModel state with `collectAsStateWithLifecycle()`.
+- **Persistence:** Room (SQLite) under `data/local`, encrypted at rest with SQLCipher (MVP; see Section 12).
+- **Settings:** Jetpack DataStore (Preferences).
+- **DI:** Koin (Kotlin DSL, no code generation), modules in `di/MainModules.kt`; a `verify()` unit test checks the dependency graph in CI.
 - **Date/time:** `java.time`; Material 3 DatePicker.
-- **Export:** Android `PdfDocument` API (or render HTML → print to PDF), shared through the Android share sheet / `FileProvider`.
-- **Min SDK:** suggestion API 26+ (covers the vast majority of devices; revisit against target device fleet).
-- **Testing:** unit tests for sorting/filtering/move rules (these are the logic-heavy parts), Compose UI tests for the auto-grow field behaviour.
+- **Export (post-MVP):** Android `PdfDocument` API (or render HTML → print to PDF), shared through the Android share sheet / `FileProvider`.
+- **Min SDK:** API 26.
+- **Testing:** unit tests for sorting/filtering/move rules (these are the logic-heavy parts); Compose UI tests for the auto-grow field behaviour run on the JVM with Robolectric, so they are part of `testDebugUnitTest` and the acceptance tests.
 
 ### 10.3 Implementation notes for tricky behaviour
 - **Auto-grow fields:** model per competency as `List<NoteDraft>` + derived UI list = filled notes + one empty trailing item. Never persist the empty trailing item.
@@ -443,7 +444,7 @@ The app has no built-in aviation knowledge; all names are data and can be rename
 | X3 | JSON backup/restore of all sessions | Low–Medium |
 | X4 | Print via Android print framework | Low once PDF exists |
 
-Suggestion: **MVP = X3 (backup) + X1 (PDF)**; X2 as a cheap extra. Think about whether the CM-specific report should include notes or only OBs + grades (privacy and tone; see D7).
+Decided: **no PDF export in the MVP** (X1 moves to v0.2); whether X3 (JSON backup) is in the MVP is open (D26). X2 as a cheap extra later. Think about whether the CM-specific report should include notes or only OBs + grades (privacy and tone; see D7).
 
 ---
 
@@ -454,7 +455,8 @@ This app stores **assessment data about identifiable individuals** (staff number
 - **GDPR/AVG** applies if used in the EU/NL: data minimisation, purpose limitation, retention limits, right of access/erasure. Staff numbers are personal data when linkable to a person.
 - **Employer policy:** the operator may prohibit storing crew assessment data on personal devices or require approved systems. Confirm before real-world use.
 - **Regulatory context:** if used for official EBT/CBTA assessment, the operator's approved assessment and grading system and record-keeping requirements apply; this app should be positioned as a **personal aide/notebook** unless adopted by the operator.
-- **Technical controls (suggestions):** local-only storage in MVP; device-credential lock (biometric/PIN) on app open; encrypted DB; exclude from cloud auto-backup (`allowBackup=false` or backup rules); screenshot blocking (`FLAG_SECURE`) as optional setting; auto-delete after N days (configurable); no analytics SDKs/trackers.
+- **Technical controls in the MVP:** local-only storage; device-credential lock (biometric/PIN) on app open; encrypted DB (SQLCipher); excluded from cloud auto-backup and device transfer (`allowBackup=false`, backup rules).
+- **Technical controls (suggestions, later):** screenshot blocking (`FLAG_SECURE`) as optional setting; auto-delete after N days (configurable); no analytics SDKs/trackers.
 - **Branding/name:** "Check Pilot" is a generic term; check Play Store name availability and trademarks before publishing.
 
 ---
@@ -463,8 +465,8 @@ This app stores **assessment data about identifiable individuals** (staff number
 
 | Phase | Content |
 |-------|---------|
-| **MVP (v0.1)** | Setup, capture list with auto-grow notes, CM tags, OB dropdown, move note, session list, autosave, debrief per CM with sorting/grading/eye pop-up, local storage |
-| v0.2 | PDF export, backup/restore, airport autocomplete, app lock |
+| **MVP (v0.1)** | Setup, capture list with auto-grow notes, CM tags, OB dropdown, move note, session list (reopen, duplicate, delete), autosave, debrief per CM with sorting/grading/eye pop-up, local storage encrypted with SQLCipher, app lock, no cloud backup |
+| v0.2 | PDF export, backup/restore (unless pulled into the MVP, D26), airport autocomplete |
 | v0.3 | Tablet layout polish, search across sessions, fairness hints |
 | v1.0 | Hardening, accessibility audit, Play Store release (private/internal testing first) |
 | Later | iOS (if Flutter/KMP chosen), optional encrypted sync, operator-specific catalogue packs, analytics per pilot over time (only with governance) |
@@ -496,10 +498,25 @@ This app stores **assessment data about identifiable individuals** (staff number
 | D11 | Persistence of "Generate debriefing" snapshot | (a) Overwrite one save (b) Keep versions | (a) with option to keep last N snapshots |
 | D12 | Airport codes | (a) IATA (b) ICAO (c) both | **Decided: (a)** IATA 3-letter only |
 | D13 | Platform strategy | (a) Android-only native (b) Cross-platform from start | (a); revisit if iOS demand is real |
-| D14 | Device security | (a) None (b) App lock (c) Encrypted DB + app lock | (c) |
+| D14 | Device security | (a) None (b) App lock (c) Encrypted DB + app lock | **Decided: (c), in the MVP** (2026-11-08) |
 | D15 | Staff numbers | (a) Free text (b) Validated format (c) Lookup from a roster | (b) with configurable pattern; no roster in MVP |
 | D16 | After renaming competencies/OBS BEH later, how do old sessions display? | (a) Original names (catalogue version stored) (b) Always latest names | (b) if renames are only corrections; (a) if the structure changes |
 | D17 | How to edit names later | (a) Edit the JSON file and rebuild (b) Import JSON from device (c) In-app catalogue editor | (b) first, (c) later if needed |
+
+### Stack and scope decisions (2026-11-08)
+
+| # | Topic | Decision |
+|---|-------|----------|
+| D18 | Dependency injection | Koin (not Hilt); modules in `di/MainModules.kt`, graph checked by a `verify()` unit test |
+| D19 | Navigation | Single activity + Navigation Compose |
+| D20 | Persistence | Room under `data/local` for sessions, notes, grades |
+| D21 | Settings | Jetpack DataStore (Preferences) |
+| D22 | Min SDK | API 26 |
+| D23 | Cloud backup | Off in the MVP (`allowBackup=false`, backup rules exclude all data) |
+| D24 | UI tests | Compose UI tests on the JVM with Robolectric, inside `testDebugUnitTest` |
+| D25 | Catalogue | Follows 9.2b: JSON asset read into memory, array order, `"1"`/`"1a"` ids, `labels` block; not stored in Room |
+| D26 | MVP export scope | No PDF in the MVP; session list offers reopen, duplicate, delete. **Open:** JSON backup/restore in the MVP or v0.2 |
+| D27 | Save semantics | **Open:** what "Save report" adds over autosave (N8) and the snapshot on Generate debriefing (G1); meaning of `DRAFT / DEBRIEFED / SAVED`; D11 "keep last N snapshots" |
 
 ---
 
