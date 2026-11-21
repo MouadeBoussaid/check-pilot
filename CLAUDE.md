@@ -41,7 +41,7 @@ core/         — logging and other cross-cutting code
 
 `docs/knowledge-base/` holds facts the code doesn't show: devices in the field, OS versions, backend and customer
 specifics. Start at its `README.md`, and read it before work that depends on devices or Android versions (SDK
-levels, behavior changes, testing). Add new facts of that kind there, not to this file.
+levels, behavior changes, testing) and before UI design work. Add new facts of that kind there, not to this file.
 
 ## Conventions
 
