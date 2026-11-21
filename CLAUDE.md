@@ -6,16 +6,16 @@ Android app for a pilot instructor. Kotlin, Compose-only UI, single `:app` modul
 
 ```sh
 ./gradlew testDebugUnitTest                                 # all unit tests (same task as CI)
-./gradlew ktlintFormat                                      # fix formatting
-./gradlew ktlintCheck                                       # what the pre-push hook enforces
+./gradlew spotlessApply                                     # fix formatting (ktlint through Spotless)
+./gradlew spotlessCheck                                     # what the pre-push hook enforces
 ```
-- Git hooks live in `.githooks` (`git config core.hooksPath .githooks`): pre-commit runs `ktlintFormat`,
-  pre-push runs `ktlintCheck`.
+- Git hooks live in `.githooks` (`git config core.hooksPath .githooks`): pre-commit runs `spotlessApply` and stages
+  the staged files again, pre-push runs `spotlessCheck`.
 
 ## Definition of done
 
 1. `./gradlew testDebugUnitTest` passes.
-2. `./gradlew ktlintCheck` passes.
+2. `./gradlew spotlessCheck` passes.
 3. New use cases / repositories have an interface, an `Impl`, a `*Fake`, and unit tests.
 4. New classes are registered in `di/MainModules.kt`.
 
@@ -26,7 +26,7 @@ Layered MVVM, packages `com.mebiad.checkpilot.<layer>.<feature>` under `app/src/
 ```
 domain/       — use cases, business logic, interfaces
 data/local    — Room database (SQLCipher-encrypted), DataStore settings, bundled assets
-ui/apps/      — feature screens (Composables + ViewModels; one Activity, Navigation Compose)
+ui/apps/      — feature screens (Composables + ViewModels; one Activity, Navigation 3)
 ui/generic/   — shared scaffold, reusable components, theme
 di/           — Koin module definitions
 core/         — logging and other cross-cutting code
@@ -68,7 +68,9 @@ A small local extension of an existing abstraction is fine to do directly.
 
 ### Tests (`app/src/test/kotlin`)
 - No MockK in new tests. Create or reuse a `*Fake` next to the interface's test package
-  (e.g. `domain/UsecaseFake`) with setters or `reset()` to drive state.
+  (e.g. `domain/UsecaseFake`, `core/clock/ClockFake`) with setters or `reset()` to drive state.
+- Tests that need the running app use `AppHarness` from `testutils/`: the real Koin modules on Robolectric, with a
+  plain SQLite database, a temporary DataStore and `ClockFake`.
 - Use `MainDispatcherRule` from `testutils/`, Turbine for flows, `runTest` + `advanceUntilIdle()`.
 - Structure every test body with `// Given`, `// When`, `// Then`; for repeated cycles use
   `// When / Then: <description>`.

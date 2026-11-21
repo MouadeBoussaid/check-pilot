@@ -19,21 +19,14 @@ spotless {
     val ktlintVersion = libs.versions.ktlint.get()
     // Spotless ignores this setting in .editorconfig. Composables are named in PascalCase.
     val ktlintSettings = mapOf("ktlint_function_naming_ignore_when_annotated_with" to "Composable")
-    // Turned off at setup because existing code fails them (ktlint has no baseline).
-    val ktlintRulesOff =
-        mapOf(
-            "ktlint_standard_no-wildcard-imports" to "disabled",
-            "ktlint_standard_import-ordering" to "disabled",
-            "ktlint_standard_final-newline" to "disabled"
-        )
     kotlin {
         target("**/*.kt")
         targetExclude("**/build/**")
-        ktlint(ktlintVersion).editorConfigOverride(ktlintSettings + ktlintRulesOff)
+        ktlint(ktlintVersion).editorConfigOverride(ktlintSettings)
     }
     kotlinGradle {
         target("**/*.gradle.kts")
         targetExclude("**/build/**")
-        ktlint(ktlintVersion).editorConfigOverride(ktlintSettings + ktlintRulesOff)
+        ktlint(ktlintVersion).editorConfigOverride(ktlintSettings)
     }
 }

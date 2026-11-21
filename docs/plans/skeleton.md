@@ -186,11 +186,10 @@ Each commit builds and passes `forge check`.
      - Robolectric has no Android Keystore
    - Turn the three ktlint rules back on, now that the template code is gone, and fix what they report.
 
-## For you to decide
+## Decided
 
-1. **Kotlin 2.4.21** over AGP's bundled 2.2.10, with the fallback above. I recommend it.
-2. **Turning the three ktlint rules back on.** I recommend it: only the template code needed them off.
-3. **The pre-commit hook stages again what it formats.** A file that was only partly staged gets staged whole. The
-   alternative is a pre-commit hook that runs `spotlessCheck` and fails, so you run `spotlessApply` yourself.
+1. **Kotlin 2.4.21** over AGP's bundled 2.2.10, with the fallback above.
+2. **The three ktlint rules are back on**: only the template code needed them off.
+3. **The pre-commit hook stages again what it formats.** A file that was only partly staged gets staged whole.
 4. **`createEmptyComposeRule()` plus a harness-owned `ActivityScenario`** instead of `createAndroidComposeRule`, so
    restarts are possible. The technical plan's Testing section gets the same one-line change.

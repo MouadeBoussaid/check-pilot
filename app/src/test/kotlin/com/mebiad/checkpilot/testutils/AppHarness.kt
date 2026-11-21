@@ -18,7 +18,6 @@ import com.mebiad.checkpilot.data.local.crypto.DatabaseKeyProviderFake
 import com.mebiad.checkpilot.data.local.db.CheckPilotDatabase
 import com.mebiad.checkpilot.di.SETTINGS_FILE_NAME
 import com.mebiad.checkpilot.di.mainModules
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -34,6 +33,7 @@ import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.module
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
+import java.io.File
 import java.time.Duration
 
 /**

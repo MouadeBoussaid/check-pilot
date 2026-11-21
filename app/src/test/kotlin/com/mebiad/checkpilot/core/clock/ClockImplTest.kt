@@ -1,10 +1,10 @@
 package com.mebiad.checkpilot.core.clock
 
+import org.junit.Assert.assertEquals
+import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import org.junit.Assert.assertEquals
-import org.junit.Test
 
 class ClockImplTest {
     @Test

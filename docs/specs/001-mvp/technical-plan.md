@@ -393,8 +393,9 @@ below.
 ## Testing
 
 **One seam: the whole app on the JVM.** Each acceptance test launches `MainActivity` under Robolectric with
-`createAndroidComposeRule` and drives it the way the Assessor does: taps, typed text, the system back and the screen's
-back arrow, sending the app to the background. It checks what the screen shows. The harness in `testutils/` starts the
+`createEmptyComposeRule()` and an `ActivityScenario` that the harness owns, so it can restart the app. It drives the
+app the way the Assessor does: taps, typed text, the system back and the screen's back arrow, sending the app to the
+background. It checks what the screen shows. The harness in `testutils/` starts the
 real Koin modules with three overrides:
 
 - an unencrypted Room database in a temporary file, through the plain framework open-helper factory instead of

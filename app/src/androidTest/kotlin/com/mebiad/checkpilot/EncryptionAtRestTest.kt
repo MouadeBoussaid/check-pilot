@@ -6,8 +6,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.mebiad.checkpilot.data.local.crypto.DatabaseKeyProviderImpl
 import com.mebiad.checkpilot.data.local.crypto.KeystorePassphraseCipherImpl
 import com.mebiad.checkpilot.data.local.db.CheckPilotDatabase
-import java.io.File
-import java.security.KeyStore
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -15,6 +13,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
+import java.security.KeyStore
 
 /** Opens the real SQLCipher database with the real Keystore-backed key provider. Runs on a phone or emulator only. */
 @RunWith(AndroidJUnit4::class)
