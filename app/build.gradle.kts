@@ -1,11 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 android {
     namespace = "com.mebiad.checkpilot"
     compileSdk {
-        version = release(37)
+        version =
+            release(37) {
+                minorApiLevel = 1
+            }
     }
 
     defaultConfig {
@@ -30,6 +37,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    buildFeatures {
+        compose = true
+    }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
     lint {
         baseline = file("lint-baseline.xml")
         abortOnError = true
@@ -38,6 +51,10 @@ android {
         // These depend on upstream releases, not on this code, so they would fail the check without a code change.
         disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencyLocking {
@@ -51,10 +68,43 @@ configurations.matching { it.name == "androidLintTool" }.configureEach {
 }
 
 dependencies {
-    implementation(libs.androidx.appcompat)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(platform(libs.koin.bom))
+
     implementation(libs.androidx.core.ktx)
-    implementation(libs.material)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.sqlcipher.android)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.serialization.core)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(platform(libs.koin.bom))
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.koin.test.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }
