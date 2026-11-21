@@ -88,6 +88,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
+    constraints {
+        // Room's compiler brings Guava 33.2.1, which has GHSA-xxph-c9ww-hj94. It runs at build time only.
+        ksp(libs.guava)
+    }
     implementation(libs.sqlcipher.android)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.koin.android)
