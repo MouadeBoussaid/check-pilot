@@ -1,0 +1,11 @@
+#,Topic,Question,Recommendation,Answer
+Q1,Naming,"One word for the stored record of one flight, and one for the per-CM graded view? The doc mixes Session / Report / Debriefing / Save file.","Session = the record; Debrief = one Crew Member's view of a Session, where Grades are set. Avoid ""report"" and ""save file"".",
+Q2,Scope of a Session,"One sector, or a whole multi-sector check?","One sector (or one sim session). Multi-sector checks = duplicate for the next leg.",
+Q3,CM1 / CM2,"Seat/role positions (CM1 = left seat/commander) or just ""first/second entered""?","Positions with the standard SOP meaning; always labelled CM1/CM2; staff numbers only, no names.",
+Q4,Snapshots (G1 D11 D27),"Must an earlier Debrief state stay retrievable after later edits?","No. One living Session, autosaved. ""Generate debriefing"" just opens the Debrief; ""Save report"" becomes ""Done"".",
+Q5,Not Observed vs unset,"Is a zero-Note Competency automatically ""Not Observed""?","No. Not Observed is a deliberate Grade; nothing is auto-graded. Ungraded Competencies show in the leave warning.",
+Q6,Catalogue evolution (D16),"Removed ids, reused ids, placeholder-era Sessions?","Ids are never removed or reused, only added or renamed. Old Sessions show the latest names; unknown ids render as the raw id. Placeholder Sessions are test data.",
+Q7,Emptied Note removal (C4 D9),"Removed on the keystroke that empties it, or later?","When it loses focus, with an undo snackbar that brings back the CM tag and OB.",
+Q8,Staff number format (D15),"What does a staff number look like at the operator?","If unknown or it varies: letters and digits, uppercased, 1-10 characters; no pattern or roster in the MVP.",
+Q9,JSON backup/restore (D26),"In the MVP or later?","v0.2, as a passphrase-encrypted export. MVP data lives on one device only.",
+Q10,App lock (D14),"When does it lock, and what if the device has no screen lock?","Cold start and after 5 min in background. No device screen lock means the app can't be used.",
