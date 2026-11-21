@@ -1,0 +1,13 @@
+#!/bin/sh
+# Formats the code, then stages again the files that were staged. A file that was only partly staged gets staged whole.
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR -- '*.kt' '*.kts')
+[ -z "$staged" ] && exit 0
+
+./gradlew spotlessApply --quiet
+
+echo "$staged" | while IFS= read -r file; do
+    [ -f "$file" ] && git add -- "$file"
+done
+exit 0
