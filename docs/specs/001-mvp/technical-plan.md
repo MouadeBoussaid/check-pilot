@@ -400,7 +400,7 @@ real Koin modules with three overrides:
 
 - an unencrypted Room database in a temporary file, through the plain framework open-helper factory instead of
   SQLCipher, whose native library doesn't load on the JVM
-- a `TestClock` that the test sets and advances
+- a `ClockFake` that the test sets and advances
 - a `DatabaseKeyProviderFake`
 
 Robolectric runs a test `Application` that leaves Koin to the harness.
@@ -416,7 +416,7 @@ Robolectric runs a test `Application` that leaves Koin to the harness.
   the seed doesn't run again.
 - **Background:** "switches to another app and comes back" moves the activity scenario to `CREATED` and back to
   `RESUMED`, which sends ON_STOP through `ProcessLifecycleOwner`.
-- **Time:** "today" is the `TestClock`'s date, and the 30-second lockout is passed by advancing it.
+- **Time:** "today" is the `ClockFake`'s date, and the 30-second lockout is passed by advancing it.
 - Each test is labelled with its scenario ID in its doc comment and named after it, as the acceptance-tests skill
   describes.
 
@@ -434,7 +434,7 @@ real key provider and checks the file can't be read without the passphrase. It s
 | `001-mvp/US-5/AS1` to `AS3` | Whole app on Robolectric | Seed zero or more Sessions with set `createdAt`, or delete the Last Session. Check the home screen's buttons and what Continue last Session opens. |
 | `001-mvp/US-6/AS1` to `AS4` | Whole app on Robolectric | Seed Notes with and without OBS BEH, move one through its menu, tap Undo. Check both Competencies and their OBS BEH labels. |
 | `001-mvp/US-7/AS1` to `AS16` | Whole app on Robolectric | Seed the PIN state and Sessions. Set or enter the PIN, use search and the date picker, open, delete, go home, send the app to the background. Check the list and whether the PIN is asked. AS16 edits a Session from the list and then taps Continue last Session. |
-| `001-mvp/US-8/AS1` to `AS6` | Whole app on Robolectric | Seed a PIN, a Catalogue edit and Sessions. Change the PIN in Settings, enter wrong PINs while advancing the `TestClock`, use Forgot PIN. Check the messages, the Sessions and the Catalogue. |
+| `001-mvp/US-8/AS1` to `AS6` | Whole app on Robolectric | Seed a PIN, a Catalogue edit and Sessions. Change the PIN in Settings, enter wrong PINs while advancing the `ClockFake`, use Forgot PIN. Check the messages, the Sessions and the Catalogue. |
 | `001-mvp/US-9/AS1` to `AS11` | Whole app on Robolectric | Seed Sessions using Catalogue items. Add, rename, reorder and delete in the Catalogue editor. Check the editor, the capture screen, the dropdown, the Debrief order and the Session list. AS11 restarts over the same database file. |
 | `001-mvp/US-10/AS1` to `AS3` | Whole app on Robolectric | Seed a Session with Notes and Grades, duplicate it from the list. Check both Sessions and Continue last Session. |
 | `001-mvp/US-11/AS1` to `AS6` | Whole app on Robolectric | Seed Sessions with Notes and Grades for CM2. Add, correct and remove Staff Numbers on the capture screen. Check the CM Tag selector, the messages, the confirmation, the CM2 Debrief and the Session list. |
@@ -452,8 +452,8 @@ real key provider and checks the file can't be read without the passphrase. It s
   - `MainActivity` and `CheckPilotApplication` at the package root
 - `app/src/test/kotlin/com/mebiad/checkpilot/`
   - `acceptance/`: one file per user story
-  - `testutils/`: the acceptance harness, Koin test module, seeding helpers, `TestClock`, `MainDispatcherRule`
-  - the unit tests and `*Fake`s, mirroring the main packages
+  - `testutils/`: the acceptance harness, Koin test module, seeding helpers, `MainDispatcherRule`
+  - the unit tests and `*Fake`s (such as `core/clock/ClockFake`), mirroring the main packages
 - `app/src/androidTest/kotlin/com/mebiad/checkpilot/`: the encryption-at-rest test
 - `docs/knowledge-base/`: device and Android-version facts, starting with the device assumption
 - `.githooks/`: pre-commit and pre-push hooks
