@@ -42,6 +42,10 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            // Robolectric's native runtime loads a library; without this, newer JDKs warn on every test run.
+            it.jvmArgs("--enable-native-access=ALL-UNNAMED")
+        }
     }
     lint {
         baseline = file("lint-baseline.xml")
