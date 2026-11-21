@@ -1,6 +1,7 @@
 # Knowledge base
 
-Facts the code doesn't show. Read this before work that depends on devices, Android versions or the test setup.
+Facts the code doesn't show. Read this before work that depends on devices, Android versions or the test setup, and
+before UI design work.
 
 ## Devices in the field
 
@@ -24,6 +25,20 @@ Facts the code doesn't show. Read this before work that depends on devices, Andr
   `InitializationProvider` once per test, so `ProcessLifecycleOwner` works.
 - `ProcessLifecycleOwner` reports `ON_STOP` 700 ms after the last activity stops. The harness idles the main looper
   for 1 s after sending the app to the background.
+
+## Design skills
+
+- Two design skills can load for UI work, and both trigger on any screen task, so each has one job:
+  - `frontend-design` owns the visual direction: palette, typefaces, layout and what makes the app distinct. Its
+    token plan becomes the Compose theme in `ui/generic/`, which stays the only source of truth for tokens.
+  - `ui-ux-pro-max` is reference and checklist only: `--domain ux` and `--stack jetpack-compose` lookups and the app
+    Pre-Delivery Checklist (accessibility, touch targets, contrast).
+- Skip `ui-ux-pro-max`'s `--design-system` step, even where its skill calls it required. Its keyword-picked palette and
+  font pairing compete with `frontend-design`'s token plan. If it runs anyway, its output is one input that
+  `frontend-design`'s review pass critiques, and it is never persisted (no `design-system/` folder in the repo).
+- `ui-ux-pro-max` doesn't detect Android from Gradle files. Always pass `--stack jetpack-compose`.
+- Its web-only checklist items don't apply: `cursor-pointer`, the 375–1440px breakpoints, and Heroicons/Lucide (use
+  Material icons).
 
 ## Formatting
 
