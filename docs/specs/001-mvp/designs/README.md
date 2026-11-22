@@ -20,6 +20,17 @@ Variant C (One-handed). The source is the "Check Pilot screens" canvas in Claude
 | `09-pin-wrong-entry.png` | Enter PIN, wrong PIN, Forgot PIN | US-7, US-8 |
 | `10-session-list.png` | Session list: search, date filter, Capture and Debrief per Session, ⋮ menu | US-7, US-10 |
 | `11-catalogue-editor.png` | Catalogue editor: reorder, rename, add, delete while unused, "used in N Sessions" | US-9 |
+| `12-settings.png` | Settings, from the Home gear: Change PIN, Edit the Catalogue | US-8, US-9 |
+| `13-pin-create.png` | Set a PIN: typed twice, "The PINs don't match.", 4 to 6 digits, Start over | US-7, US-8 |
+| `14-pin-lockout.png` | PIN lockout after 5 wrong PINs: wait 30 seconds, keypad disabled, Forgot PIN | US-8 |
+| `15-forgot-pin.png` | Forgot PIN: deletes all saved Sessions, the Catalogue is kept | US-8 |
+| `16-session-menu.png` | Session list, ⋮ menu open: Duplicate, Delete | US-7, US-10 |
+| `17-delete-session.png` | Delete a Session: confirmation with a summary of it | US-7 |
+| `18-move-note.png` | Move a Note: pick the Competency, the OBS BEH link is removed | US-6 |
+| `19-edit-staff-number.png` | Edit a Staff Number from its chip, Remove refused while Notes are tagged | US-11 |
+| `20-remove-crew-member.png` | Remove CM2: confirmation that CM2's Grades are deleted | US-11 |
+| `21-date-picker.png` | Setup date picker: selected date filled, today ringed | US-1 |
+| `22-leave-guard.png` | Leaving a Debrief with ungraded Competencies: Stay, Leave | US-4 |
 
 ## Look
 
@@ -34,14 +45,13 @@ Variant C (One-handed). The source is the "Check Pilot screens" canvas in Claude
 
 ## Not drawn
 
-These have no screen yet. Build them in Variant A's look with Material 3 components:
+Every screen the stories need has a picture now. These states don't, and reuse a drawn one:
 
-- Settings (change PIN, entry to the Catalogue editor) and setting a PIN the first time (US-7, US-8, US-9)
-- the PIN lockout message and the Forgot PIN confirmation (US-8)
-- the Competency picker for moving a Note (US-6)
-- the ⋮ menu's Duplicate and Delete (US-7, US-10)
-- editing a Staff Number after the start, its refusal messages and confirmation (US-11)
-- the date picker, and the Debrief's leave guard (US-1, US-4)
+- the undo snackbar after moving a Note (US-6): as in `05-capture-end-undo`
+- the "At least one Staff Number is required." refusal (US-11): as in `19-edit-staff-number`
+
+Competency 7 is named "Application of Knowledge" in `18-move-note`; that name is an assumption until the
+Catalogue confirms it.
 
 ## What the pictures don't show
 
