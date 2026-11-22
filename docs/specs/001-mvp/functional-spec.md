@@ -136,8 +136,10 @@ shows.
    CM1 / CM2 / BOTH appears under it with BOTH selected.
 2. **Given** a focused Note tagged BOTH, **when** the Assessor taps CM1 and later taps BOTH again, **then** the selector
    shows CM1 selected and then BOTH selected.
-3. **Given** a Session with one Crew Member, **when** the Assessor focuses a Note, **then** no CM Tag selector appears.
-4. **Given** an empty Note field, **when** the Assessor focuses it, **then** no OBS BEH dropdown is offered.
+3. **Given** one Session with one Crew Member and one with two, **when** the Assessor focuses a Note in each, **then**
+   only the Session with two shows the CM Tag selector.
+4. **Given** an empty Note field and a Note with text, **when** the Assessor focuses each, **then** only the Note with
+   text offers the OBS BEH dropdown.
 5. **Given** a Note with text under Competency 3, **when** the Assessor opens the OBS BEH dropdown, **then** it lists
    only Competency 3's OBS BEH, in Catalogue order.
 6. **Given** a Note under Competency 3, **when** the Assessor selects OBS BEH 3c, **then** "3c" is shown in small italic
@@ -200,12 +202,14 @@ both Crew Members.
 18. **Given** the CM1 Debrief with Competencies without a Grade, **when** the Assessor taps CM2 on the toggle, **then**
     the CM2 Debrief shows and no ungraded-Competencies message appears.
 
-### US-5: Continue the Last Session from the home screen (P1)
+### US-5: Continue the Last Session from the home screen (P0)
 
 As an Assessor, I want the Session I am working on one tap away from the home screen, without a PIN, so that I can get
 back to it instantly during or right after the flight.
 
-**Why this priority:** returning to the current Session is the most frequent action after starting one.
+**Why this priority:** returning to the current Session is the most frequent action after starting one. It comes
+first after US-1 because every later story reaches its Sessions, the Session list and Settings through the home
+screen it builds.
 
 **Independent test:** create Sessions and check what Continue last Session opens and when it is shown.
 
@@ -335,8 +339,8 @@ Session.
    from the Catalogue editor and the capture screen.
 8. **Given** an OBS BEH that Notes in 4 Sessions use, **when** the Assessor looks at its delete option, **then** it is
    greyed out with "used in 4 Sessions".
-9. **Given** the capture screen or a Debrief, **when** the Assessor looks for the Catalogue editor, **then** neither
-   offers a way to open it.
+9. **Given** Settings, the capture screen and a Debrief, **when** the Assessor looks for the Catalogue editor, **then**
+   only Settings offers a way to open it.
 10. **Given** a PIN is set, **when** the Assessor opens the Catalogue editor from Settings, **then** no PIN is asked.
 11. **Given** an edited Catalogue, **when** the app is updated to a new version, **then** the Catalogue keeps its edits.
 
