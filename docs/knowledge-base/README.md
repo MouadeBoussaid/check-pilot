@@ -5,7 +5,9 @@ before UI design work.
 
 ## Devices in the field
 
-- Assumed until the owner names the device: one recent Pixel or Samsung phone on Android 15 or later.
+- The app runs mainly on a Samsung Galaxy S23 Ultra, on the latest Android version it gets: Android 17 (API 37) with
+  One UI 9.0. The owner named the device in November 2026.
+- One UI 9 is expected to be the S23 series' last major upgrade, so this device is likely to stay on Android 17.
 - `minSdk` is 26 and `targetSdk` is 37, so the app can run on older devices too, but nobody tests it on them.
 
 ## SDK levels
