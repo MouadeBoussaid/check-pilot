@@ -1,4 +1,7 @@
 <resources>
-    <!-- Compose draws every screen; this theme only covers the window before the first frame. -->
-    <style name="Theme.CheckPilot" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Compose draws every screen; this theme only covers the window before the first frame. It is dark, like
+         CheckPilotTheme, so the app doesn't flash white on launch. -->
+    <style name="Theme.CheckPilot" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 </resources>
