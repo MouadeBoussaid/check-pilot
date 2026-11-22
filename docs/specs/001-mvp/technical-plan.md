@@ -471,7 +471,8 @@ Each story's **Designs** line names its PNGs.
   and the Competencies, `ui/generic` fields and the date picker, `domain/session` (start, validation),
   `domain/catalogue` (read), `data/local/db`.
 - **Blocked by:** none.
-- **Designs:** `01-home`, `02-setup`, `03-capture-note-focused` (route, date and Competency headings only).
+- **Designs:** `01-home`, `02-setup`, `21-date-picker`, `03-capture-note-focused` (route, date and Competency
+  headings only).
 
 ### US-2: Capture Notes
 
@@ -493,7 +494,8 @@ Each story's **Designs** line names its PNGs.
   selectors, summary header, CM toggle, leave guard, date), `domain/debrief`, `domain/grade`, `domain/session` (date),
   `data/local/db`.
 - **Blocked by:** US-3.
-- **Designs:** `05-capture-end-undo` (Done), `06-debrief-pick-cm`, `07-debrief-grade-menu`, `08-debrief-notes-popup`.
+- **Designs:** `05-capture-end-undo` (Done), `06-debrief-pick-cm`, `07-debrief-grade-menu`, `08-debrief-notes-popup`,
+  `22-leave-guard`.
 
 ### US-5: Continue the Last Session from the home screen
 
@@ -505,7 +507,8 @@ Each story's **Designs** line names its PNGs.
 
 - **Touches:** `ui/apps/capture` (Note menu, Competency picker, undo), `domain/note` (move in one transaction, restore).
 - **Blocked by:** US-3.
-- **Designs:** `03-capture-note-focused` (move button), `05-capture-end-undo`; the Competency picker isn't drawn.
+- **Designs:** `03-capture-note-focused` (move button), `18-move-note`, `05-capture-end-undo` (the undo snackbar after
+  a move looks the same).
 
 ### US-7: Find and open a saved Session behind the PIN
 
@@ -513,32 +516,33 @@ Each story's **Designs** line names its PNGs.
   `domain/pin` (hash, check, unlock, lockout state), `domain/session` (search, delete, Grade progress through
   `domain/grade`), `data/local/settings`, `ProcessLifecycleOwner` wiring.
 - **Blocked by:** US-4.
-- **Designs:** `09-pin-wrong-entry`, `10-session-list`; setting a first PIN isn't drawn.
+- **Designs:** `13-pin-create`, `09-pin-wrong-entry`, `10-session-list`, `16-session-menu`, `17-delete-session`.
 
 ### US-8: Change or reset the PIN
 
 - **Touches:** `ui/apps/settings` (change PIN), `ui/apps/pin` (lockout message, Forgot PIN), `domain/pin` (change,
   lockout timing, Forgot PIN), `domain/session` (delete every Session), `data/local/settings`.
 - **Blocked by:** US-7.
-- **Designs:** `09-pin-wrong-entry`; Settings, the lockout message and the Forgot PIN confirmation aren't drawn.
+- **Designs:** `12-settings`, `13-pin-create`, `09-pin-wrong-entry`, `14-pin-lockout`, `15-forgot-pin`.
 
 ### US-9: Edit the Catalogue
 
 - **Touches:** `ui/apps/settings` (entry point), `ui/apps/catalogue`, `domain/catalogue` (add, rename, reorder,
   delete while unused, "used in N Sessions"), `data/local/db`.
 - **Blocked by:** US-4, US-7.
-- **Designs:** `11-catalogue-editor`; its Settings entry isn't drawn.
+- **Designs:** `12-settings`, `11-catalogue-editor`.
 
 ### US-10: Duplicate a Session
 
 - **Touches:** `ui/apps/sessions` (duplicate action), `domain/session` (duplicate: Staff Numbers copied, route
   swapped, today's date).
 - **Blocked by:** US-5, US-7.
-- **Designs:** `10-session-list` (⋮ menu); the Duplicate action isn't drawn.
+- **Designs:** `10-session-list`, `16-session-menu`.
 
 ### US-11: Change Staff Numbers after the start
 
 - **Touches:** `ui/apps/capture` (Staff Number editing, refusal messages, confirmation), `domain/session` (add,
   correct, remove with checks), `domain/grade` (deleting a removed Crew Member's Grades).
 - **Blocked by:** US-4, US-7.
-- **Designs:** `03-capture-note-focused` (Staff Number chips); the editing flow isn't drawn.
+- **Designs:** `03-capture-note-focused` (Staff Number chips), `19-edit-staff-number`, `20-remove-crew-member`; the
+  "At least one Staff Number is required." refusal isn't drawn (it looks like the one in `19-edit-staff-number`).
