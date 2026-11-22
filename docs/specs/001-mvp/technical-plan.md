@@ -462,24 +462,30 @@ real key provider and checks the file can't be read without the passphrase. It s
 
 Every story needs the skeleton pull request merged first, and the designs for its screens.
 
+The designs are Variant A in [`designs/`](designs/README.md): one PNG per screen, the look, and what isn't drawn.
+Each story's **Designs** line names its PNGs.
+
 ### US-1: Start a Session
 
 - **Touches:** `ui/apps/home` (New session), `ui/apps/setup`, a first `ui/apps/capture` showing the route, the date
   and the Competencies, `ui/generic` fields and the date picker, `domain/session` (start, validation),
   `domain/catalogue` (read), `data/local/db`.
 - **Blocked by:** none.
+- **Designs:** `01-home`, `02-setup`, `03-capture-note-focused` (route, date and Competency headings only).
 
 ### US-2: Capture Notes
 
 - **Touches:** `ui/apps/capture` (Note fields, trailing field, focus rule, ✕, undo snackbar, Done), `domain/note`
   (serialized writes, delete, restore, cleanup when a Session opens), `data/local/db`.
 - **Blocked by:** US-1.
+- **Designs:** `03-capture-note-focused`, `04-capture-writing-note`, `05-capture-end-undo`.
 
 ### US-3: Tag a Note and link an Observable Behaviour
 
 - **Touches:** `ui/apps/capture` (CM Tag selector, OBS BEH dropdown, italic labels under the Note and the title),
   `domain/note` (CM Tag, OBS BEH from the Note's own Competency).
 - **Blocked by:** US-2.
+- **Designs:** `03-capture-note-focused`, `04-capture-writing-note`.
 
 ### US-4: Debrief a Crew Member
 
@@ -487,16 +493,19 @@ Every story needs the skeleton pull request merged first, and the designs for it
   selectors, summary header, CM toggle, leave guard, date), `domain/debrief`, `domain/grade`, `domain/session` (date),
   `data/local/db`.
 - **Blocked by:** US-3.
+- **Designs:** `05-capture-end-undo` (Done), `06-debrief-pick-cm`, `07-debrief-grade-menu`, `08-debrief-notes-popup`.
 
 ### US-5: Continue the Last Session from the home screen
 
 - **Touches:** `ui/apps/home` (Continue last Session, Open session, Settings), `domain/session` (Last Session).
 - **Blocked by:** US-1.
+- **Designs:** `01-home`.
 
 ### US-6: Move a Note to another Competency
 
 - **Touches:** `ui/apps/capture` (Note menu, Competency picker, undo), `domain/note` (move in one transaction, restore).
 - **Blocked by:** US-3.
+- **Designs:** `03-capture-note-focused` (move button), `05-capture-end-undo`; the Competency picker isn't drawn.
 
 ### US-7: Find and open a saved Session behind the PIN
 
@@ -504,27 +513,32 @@ Every story needs the skeleton pull request merged first, and the designs for it
   `domain/pin` (hash, check, unlock, lockout state), `domain/session` (search, delete, Grade progress through
   `domain/grade`), `data/local/settings`, `ProcessLifecycleOwner` wiring.
 - **Blocked by:** US-4.
+- **Designs:** `09-pin-wrong-entry`, `10-session-list`; setting a first PIN isn't drawn.
 
 ### US-8: Change or reset the PIN
 
 - **Touches:** `ui/apps/settings` (change PIN), `ui/apps/pin` (lockout message, Forgot PIN), `domain/pin` (change,
   lockout timing, Forgot PIN), `domain/session` (delete every Session), `data/local/settings`.
 - **Blocked by:** US-7.
+- **Designs:** `09-pin-wrong-entry`; Settings, the lockout message and the Forgot PIN confirmation aren't drawn.
 
 ### US-9: Edit the Catalogue
 
 - **Touches:** `ui/apps/settings` (entry point), `ui/apps/catalogue`, `domain/catalogue` (add, rename, reorder,
   delete while unused, "used in N Sessions"), `data/local/db`.
 - **Blocked by:** US-4, US-7.
+- **Designs:** `11-catalogue-editor`; its Settings entry isn't drawn.
 
 ### US-10: Duplicate a Session
 
 - **Touches:** `ui/apps/sessions` (duplicate action), `domain/session` (duplicate: Staff Numbers copied, route
   swapped, today's date).
 - **Blocked by:** US-5, US-7.
+- **Designs:** `10-session-list` (⋮ menu); the Duplicate action isn't drawn.
 
 ### US-11: Change Staff Numbers after the start
 
 - **Touches:** `ui/apps/capture` (Staff Number editing, refusal messages, confirmation), `domain/session` (add,
   correct, remove with checks), `domain/grade` (deleting a removed Crew Member's Grades).
 - **Blocked by:** US-4, US-7.
+- **Designs:** `03-capture-note-focused` (Staff Number chips); the editing flow isn't drawn.
