@@ -1,19 +1,40 @@
 package com.mebiad.checkpilot.ui.generic.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 
-// Plain Material 3 until the designs set the colours and type.
+private val LocalCheckPilotColors = staticCompositionLocalOf { CheckPilotExtraColors }
+private val LocalMonoTypography = staticCompositionLocalOf { CheckPilotMonoTypography }
+
+// Dark only, whatever the system setting: the capture screen is used in a dim, vibrating cockpit (functional spec),
+// and the Variant A designs keep every screen dark.
 @Composable
-fun CheckPilotTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) darkColorScheme() else lightColorScheme(),
-        content = content
-    )
+fun CheckPilotTheme(content: @Composable () -> Unit) {
+    CompositionLocalProvider(
+        LocalCheckPilotColors provides CheckPilotExtraColors,
+        LocalMonoTypography provides CheckPilotMonoTypography
+    ) {
+        MaterialTheme(
+            colorScheme = CheckPilotColorScheme,
+            typography = CheckPilotTypography,
+            shapes = CheckPilotShapes,
+            content = content
+        )
+    }
+}
+
+/** The design tokens [MaterialTheme] has no slot for. */
+object CheckPilotTheme {
+    val colors: CheckPilotColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalCheckPilotColors.current
+
+    val monoTypography: MonoTypography
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalMonoTypography.current
 }
