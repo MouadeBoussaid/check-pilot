@@ -50,9 +50,6 @@ Every screen the stories need has a picture now. These states don't, and reuse a
 - the undo snackbar after moving a Note (US-6): as in `05-capture-end-undo`
 - the "At least one Staff Number is required." refusal (US-11): as in `19-edit-staff-number`
 
-Competency 7 is named "Application of Knowledge" in `18-move-note`; that name is an assumption until the
-Catalogue confirms it.
-
 ## What the pictures don't show
 
 - The status bar, gesture bar and keyboard are the system's, drawn for context only.
