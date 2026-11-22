@@ -255,8 +255,8 @@ class US1StartASessionTest {
     /** Taps [date]'s day in the open Material 3 date picker, which describes each day like "Sunday, November 1, 2026". */
     private fun pickInDatePicker(date: LocalDate) {
         val description = date.format(DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.US))
-        composeRule.waitUntilAtLeastOneExists(hasContentDescription(description, substring = true), TIMEOUT_MS)
-        composeRule.onNode(hasContentDescription(description, substring = true)).performClick()
+        composeRule.waitUntilAtLeastOneExists(hasText(description, substring = true), TIMEOUT_MS)
+        composeRule.onNode(hasText(description, substring = true)).performClick()
         composeRule.onNodeWithText("OK").performClick()
     }
 
