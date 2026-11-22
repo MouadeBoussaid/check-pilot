@@ -10,12 +10,25 @@ import com.mebiad.checkpilot.data.local.crypto.DatabaseKeyProvider
 import com.mebiad.checkpilot.data.local.crypto.DatabaseKeyProviderImpl
 import com.mebiad.checkpilot.data.local.crypto.KeystorePassphraseCipherImpl
 import com.mebiad.checkpilot.data.local.crypto.PassphraseCipher
+import com.mebiad.checkpilot.data.local.db.CatalogueRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.CheckPilotDatabase
+import com.mebiad.checkpilot.data.local.db.SessionRepositoryImpl
+import com.mebiad.checkpilot.domain.catalogue.CatalogueRepository
+import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecase
+import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecaseImpl
+import com.mebiad.checkpilot.domain.session.ObserveSessionUsecase
+import com.mebiad.checkpilot.domain.session.ObserveSessionUsecaseImpl
+import com.mebiad.checkpilot.domain.session.SessionRepository
+import com.mebiad.checkpilot.domain.session.StartSessionUsecase
+import com.mebiad.checkpilot.domain.session.StartSessionUsecaseImpl
+import com.mebiad.checkpilot.ui.apps.capture.CaptureViewModel
+import com.mebiad.checkpilot.ui.apps.setup.SetupViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 const val SETTINGS_FILE_NAME = "settings"
@@ -49,4 +62,19 @@ val dataModule =
         }
     }
 
-val mainModules = listOf(coreModule, dataModule)
+val domainModule =
+    module {
+        single<SessionRepository> { SessionRepositoryImpl(dao = get<CheckPilotDatabase>().sessionDao()) }
+        single<CatalogueRepository> { CatalogueRepositoryImpl(dao = get<CheckPilotDatabase>().competencyDao()) }
+        single<StartSessionUsecase> { StartSessionUsecaseImpl(repository = get(), clock = get()) }
+        single<ObserveSessionUsecase> { ObserveSessionUsecaseImpl(repository = get()) }
+        single<ObserveCatalogueUsecase> { ObserveCatalogueUsecaseImpl(repository = get()) }
+    }
+
+val uiModule =
+    module {
+        viewModelOf(::SetupViewModel)
+        viewModelOf(::CaptureViewModel)
+    }
+
+val mainModules = listOf(coreModule, dataModule, domainModule, uiModule)
