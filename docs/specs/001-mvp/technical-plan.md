@@ -8,8 +8,9 @@ Sessions, Notes, Grades and the Catalogue live in a Room database encrypted with
 lockout state live in DataStore. Nothing leaves the phone. Every edit is written to the database as it happens, and
 the Debrief is computed from the Catalogue, the Notes and the Grades each time it opens. Work starts with a thin
 skeleton pull request (build setup, an empty app that launches, the database with the placeholder Catalogue, the test
-harness). After that, the user stories are built one by one, each once its screens are designed. Every acceptance
-scenario is tested at one seam: the whole app running on the JVM under Robolectric.
+harness). After that, the user stories are built one by one, each once its screens are designed, US-5 straight after
+US-1 because the later stories reach their Sessions through it. Every acceptance scenario is tested at one seam: the
+whole app running on the JVM under Robolectric.
 [Functional spec](functional-spec.md).
 
 ## Technical context
@@ -406,8 +407,11 @@ real Koin modules with three overrides:
 Robolectric runs a test `Application` that leaves Koin to the harness.
 
 - **Given steps** are written straight into the database through the real repositories in the test's Koin graph. This
-  keeps tests short and stops one story's tests depending on another story's screens. The When and Then always go
-  through the UI.
+  keeps tests short and stops one story's tests depending on another story's screens. Where the repository code a
+  Given needs comes with a later story, such as deleting a Session (US-7) or editing the Catalogue (US-9), the Given
+  writes the rows through the DAO instead. The When and Then always go through the UI.
+- **Opening a seeded Session:** a test opens it with Continue last Session (US-5), or through the Session list once
+  US-7 is built. There's no test-only entry point into a Session.
 - **Finding elements:** by the labels the spec fixes ("Generate debriefing", "Continue last Session", "Grades 6/9",
   the Grade names) and by content descriptions. Test tags only where there's no text, such as an empty Note field.
   Layout, styling and widget types are never checked, so restyling to the designs doesn't break tests.
@@ -428,7 +432,7 @@ real key provider and checks the file can't be read without the passphrase. It s
 | Scenarios | Seam | How |
 |---|---|---|
 | `001-mvp/US-1/AS1` to `AS9` | Whole app on Robolectric | Start on the home screen, tap New session, fill in the setup fields and the date picker, tap Start. Check the capture screen, or the validation message and that no Session was created. |
-| `001-mvp/US-2/AS1` to `AS9` | Whole app on Robolectric | Seed a Session, open it in capture, type, backspace, tap away, tap ✕ and Undo. Check the fields and snackbars. AS8 restarts the app over the same database file. |
+| `001-mvp/US-2/AS1` to `AS9` | Whole app on Robolectric | Seed a Session, open it with Continue last Session, type, backspace, tap away, tap ✕ and Undo. Check the fields and snackbars. AS5 and AS7 seed the Note's CM Tag and OBS BEH in its row, and check the restored row keeps its id, `cmTag`, `observableBehaviourId` and `sortIndex`. AS8 restarts the app over the same database file and reopens the Session with Continue last Session. |
 | `001-mvp/US-3/AS1` to `AS8` | Whole app on Robolectric | Seed Sessions with one or two Crew Members and Notes. Focus Notes, tap CM Tags, choose OBS BEH. Check the selector, the dropdown and the italic OBS BEH labels. |
 | `001-mvp/US-4/AS1` to `AS18` | Whole app on Robolectric | Seed Notes, CM Tags, OBS BEH and Grades. Tap Generate debriefing, the CM toggle, eye icons, Grade selectors, back and the date. Check the order, pop-ups, header, messages and Grades. |
 | `001-mvp/US-5/AS1` to `AS3` | Whole app on Robolectric | Seed zero or more Sessions with set `createdAt`, or delete the Last Session. Check the home screen's buttons and what Continue last Session opens. |
@@ -478,7 +482,7 @@ Each story's **Designs** line names its PNGs.
 
 - **Touches:** `ui/apps/capture` (Note fields, trailing field, focus rule, ✕, undo snackbar, Done), `domain/note`
   (serialized writes, delete, restore, cleanup when a Session opens), `data/local/db`.
-- **Blocked by:** US-1.
+- **Blocked by:** US-1, US-5.
 - **Designs:** `03-capture-note-focused`, `04-capture-writing-note`, `05-capture-end-undo`.
 
 ### US-3: Tag a Note and link an Observable Behaviour
@@ -500,6 +504,7 @@ Each story's **Designs** line names its PNGs.
 ### US-5: Continue the Last Session from the home screen
 
 - **Touches:** `ui/apps/home` (Continue last Session, Open session, Settings), `domain/session` (Last Session).
+  Open session and Settings are shown and enabled but do nothing yet: US-7 and US-8 wire them.
 - **Blocked by:** US-1.
 - **Designs:** `01-home`.
 
@@ -512,16 +517,17 @@ Each story's **Designs** line names its PNGs.
 
 ### US-7: Find and open a saved Session behind the PIN
 
-- **Touches:** `ui/apps/pin` (set, enter), `ui/apps/sessions` (list, search, date filter, open, delete),
-  `domain/pin` (hash, check, unlock, lockout state), `domain/session` (search, delete, Grade progress through
-  `domain/grade`), `data/local/settings`, `ProcessLifecycleOwner` wiring.
+- **Touches:** `ui/apps/home` (wire Open session), `ui/apps/pin` (set, enter), `ui/apps/sessions` (list, search,
+  date filter, open, delete), `domain/pin` (hash, check, unlock, lockout state), `domain/session` (search, delete,
+  Grade progress through `domain/grade`), `data/local/settings`, `ProcessLifecycleOwner` wiring.
 - **Blocked by:** US-4.
 - **Designs:** `13-pin-create`, `09-pin-wrong-entry`, `10-session-list`, `16-session-menu`, `17-delete-session`.
 
 ### US-8: Change or reset the PIN
 
-- **Touches:** `ui/apps/settings` (change PIN), `ui/apps/pin` (lockout message, Forgot PIN), `domain/pin` (change,
-  lockout timing, Forgot PIN), `domain/session` (delete every Session), `data/local/settings`.
+- **Touches:** `ui/apps/home` (wire Settings), `ui/apps/settings` (change PIN), `ui/apps/pin` (lockout message,
+  Forgot PIN), `domain/pin` (change, lockout timing, Forgot PIN), `domain/session` (delete every Session),
+  `data/local/settings`.
 - **Blocked by:** US-7.
 - **Designs:** `12-settings`, `13-pin-create`, `09-pin-wrong-entry`, `14-pin-lockout`, `15-forgot-pin`.
 
