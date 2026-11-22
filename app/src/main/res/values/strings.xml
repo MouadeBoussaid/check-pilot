@@ -1,3 +1,30 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Check Pilot</string>
+
+    <string name="back">Back</string>
+    <string name="route_arrow">→</string>
+
+    <string name="home_new_session">New Session</string>
+
+    <string name="setup_title">New Session</string>
+    <string name="setup_crew_members">Crew Members</string>
+    <!-- CM1 is the glossary's name for the first Crew Member slot, not a typo of "CM!". -->
+    <string name="crew_member_1" tools:ignore="Typos">CM1</string>
+    <string name="crew_member_2">CM2</string>
+    <string name="setup_staff_number_placeholder">Staff Number</string>
+    <string name="setup_staff_number_hint">At least one Staff Number, 4 to 6 digits. Either slot may stay empty.</string>
+    <string name="setup_route">Route</string>
+    <string name="setup_from">From</string>
+    <string name="setup_to">To</string>
+    <string name="setup_date">Date</string>
+    <string name="setup_change_date">Change the date</string>
+    <string name="setup_start">Start</string>
+    <string name="setup_no_staff_number">At least one Staff Number is required.</string>
+    <string name="setup_staff_number_not_4_to_6_digits">A Staff Number has 4 to 6 digits.</string>
+    <string name="setup_airport_code_missing">Both airport codes are required.</string>
+    <string name="setup_airport_code_not_3_letters">An airport code is 3 letters.</string>
+
+    <string name="date_picker_title">Session date</string>
+    <string name="date_picker_ok">OK</string>
+    <string name="date_picker_cancel">Cancel</string>
 </resources>

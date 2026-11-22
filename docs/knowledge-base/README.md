@@ -27,6 +27,9 @@ before UI design work.
   `InitializationProvider` once per test, so `ProcessLifecycleOwner` works.
 - `ProcessLifecycleOwner` reports `ON_STOP` 700 ms after the last activity stops. The harness idles the main looper
   for 1 s after sending the app to the background.
+- Material 3 1.5.0's `DatePicker` gives each day the semantics **text** "Sunday, November 1, 2026" (and "Today, …"
+  for today), with no content description, even in the unmerged tree. Find a day with
+  `hasText(description, substring = true)`, not `hasContentDescription`. Checked on Robolectric in November 2026.
 
 ## Design skills
 
