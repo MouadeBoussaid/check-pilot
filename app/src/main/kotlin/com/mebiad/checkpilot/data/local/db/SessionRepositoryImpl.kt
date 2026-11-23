@@ -8,11 +8,17 @@ import com.mebiad.checkpilot.domain.session.SessionRepository
 import com.mebiad.checkpilot.domain.session.StaffNumber
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
 
 class SessionRepositoryImpl(
     private val dao: SessionDao,
 ) : SessionRepository {
     override suspend fun insert(session: Session) = dao.insert(session.toEntity())
+
+    override suspend fun updateDate(
+        id: String,
+        date: LocalDate,
+    ) = dao.updateDate(id, date)
 
     override fun observe(id: String): Flow<Session?> = dao.observe(id).map { it?.toSession() }
 
