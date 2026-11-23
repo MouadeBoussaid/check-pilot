@@ -75,6 +75,11 @@ class AppHarness : ExternalResource() {
         launch()
     }
 
+    /** Presses the system back button, or makes the back gesture. */
+    fun pressBack() {
+        activeScenario().onActivity { it.onBackPressedDispatcher.onBackPressed() }
+    }
+
     fun sendToBackground() {
         activeScenario().moveToState(Lifecycle.State.CREATED)
         waitForProcessLifecycle()
