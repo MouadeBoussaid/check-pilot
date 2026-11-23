@@ -12,10 +12,16 @@ import com.mebiad.checkpilot.data.local.crypto.KeystorePassphraseCipherImpl
 import com.mebiad.checkpilot.data.local.crypto.PassphraseCipher
 import com.mebiad.checkpilot.data.local.db.CatalogueRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.CheckPilotDatabase
+import com.mebiad.checkpilot.data.local.db.NoteRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.SessionRepositoryImpl
 import com.mebiad.checkpilot.domain.catalogue.CatalogueRepository
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecase
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecaseImpl
+import com.mebiad.checkpilot.domain.note.EditNotesUsecase
+import com.mebiad.checkpilot.domain.note.EditNotesUsecaseImpl
+import com.mebiad.checkpilot.domain.note.NoteRepository
+import com.mebiad.checkpilot.domain.note.ObserveNotesUsecase
+import com.mebiad.checkpilot.domain.note.ObserveNotesUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecase
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecaseImpl
 import com.mebiad.checkpilot.domain.session.SessionRepository
@@ -70,6 +76,10 @@ val domainModule =
         single<StartSessionUsecase> { StartSessionUsecaseImpl(repository = get(), clock = get()) }
         single<ObserveSessionUsecase> { ObserveSessionUsecaseImpl(repository = get()) }
         single<ObserveCatalogueUsecase> { ObserveCatalogueUsecaseImpl(repository = get()) }
+        single<NoteRepository> { NoteRepositoryImpl(dao = get<CheckPilotDatabase>().noteDao()) }
+        single<ObserveNotesUsecase> { ObserveNotesUsecaseImpl(repository = get()) }
+        // One writer for the whole app keeps every Note write in call order.
+        single<EditNotesUsecase> { EditNotesUsecaseImpl(repository = get()) }
     }
 
 val uiModule =
