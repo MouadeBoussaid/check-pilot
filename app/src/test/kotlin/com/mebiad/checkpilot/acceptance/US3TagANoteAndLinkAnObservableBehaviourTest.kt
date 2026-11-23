@@ -141,6 +141,7 @@ class US3TagANoteAndLinkAnObservableBehaviourTest {
         composeRule.waitUntilAtLeastOneExists(hasText(CONTINUE, ignoreCase = true), TIMEOUT_MS)
         seedSession(SESSION_ONE_CM, twoCrewMembers = false, createdAt = MORNING.plusSeconds(3600))
         seedNote(SESSION_ONE_CM, COMPETENCY_1, id = "note-one", text = "Late flaps", sortIndex = 0)
+        composeRule.waitUntilExactlyOneExists(hasText(ROUTE_ONE_CM), TIMEOUT_MS)
         openLastSession(route = ROUTE_ONE_CM)
         composeRule.waitUntilExactlyOneExists(hasText("Late flaps"), TIMEOUT_MS)
         focus(noteField(COMPETENCY_1, index = 0))
