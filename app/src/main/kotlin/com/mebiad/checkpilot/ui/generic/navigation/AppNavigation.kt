@@ -56,7 +56,12 @@ fun AppNavigation() {
                         onSessionStarted = { sessionId -> backStack[backStack.lastIndex] = Capture(sessionId) }
                     )
                 }
-                entry<Capture> { key -> CaptureScreen(viewModel = koinViewModel { parametersOf(key.sessionId) }) }
+                entry<Capture> { key ->
+                    CaptureScreen(
+                        viewModel = koinViewModel { parametersOf(key.sessionId) },
+                        onDone = { backStack.removeAll { it != Home } }
+                    )
+                }
             }
     )
 }

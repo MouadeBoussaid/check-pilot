@@ -28,6 +28,12 @@
     <string name="setup_airport_code_missing">Both airport codes are required.</string>
     <string name="setup_airport_code_not_3_letters">An airport code is 3 letters.</string>
 
+    <string name="capture_add_note">Add Note</string>
+    <string name="capture_delete_note">Delete Note</string>
+    <string name="capture_note_erased">Note erased</string>
+    <string name="capture_done">Done</string>
+    <string name="undo">Undo</string>
+
     <string name="date_picker_title">Session date</string>
     <string name="date_picker_ok">OK</string>
     <string name="date_picker_cancel">Cancel</string>
