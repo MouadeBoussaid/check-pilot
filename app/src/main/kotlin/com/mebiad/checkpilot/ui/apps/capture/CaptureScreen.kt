@@ -1,6 +1,6 @@
 package com.mebiad.checkpilot.ui.apps.capture
 
-import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,7 +29,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,19 +64,26 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mebiad.checkpilot.R
 import com.mebiad.checkpilot.domain.catalogue.Competency
 import com.mebiad.checkpilot.domain.catalogue.ObservableBehaviour
 import com.mebiad.checkpilot.domain.note.CmTag
+import com.mebiad.checkpilot.domain.session.CrewMember
 import com.mebiad.checkpilot.domain.session.Session
 import com.mebiad.checkpilot.domain.session.StaffNumber
+import com.mebiad.checkpilot.ui.generic.components.CmTagBadge
 import com.mebiad.checkpilot.ui.generic.components.CrewMemberDot
 import com.mebiad.checkpilot.ui.generic.components.CrewMemberSlot
+import com.mebiad.checkpilot.ui.generic.components.PrimaryButton
 import com.mebiad.checkpilot.ui.generic.components.RouteText
 import com.mebiad.checkpilot.ui.generic.components.SecondaryButton
 import com.mebiad.checkpilot.ui.generic.components.UndoSnackbarHost
+import com.mebiad.checkpilot.ui.generic.components.color
+import com.mebiad.checkpilot.ui.generic.components.label
 import com.mebiad.checkpilot.ui.generic.components.showUndo
+import com.mebiad.checkpilot.ui.generic.components.slot
 import com.mebiad.checkpilot.ui.generic.format.toDisplayText
 import com.mebiad.checkpilot.ui.generic.theme.CheckPilotTheme
 import kotlinx.coroutines.flow.collectLatest
@@ -82,6 +91,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun CaptureScreen(
     viewModel: CaptureViewModel,
+    onGenerateDebrief: (CrewMember) -> Unit,
     onDone: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -106,6 +116,7 @@ fun CaptureScreen(
         onDeleteField = viewModel::onDeleteField,
         onCmTagSelect = viewModel::onCmTagSelect,
         onObservableBehaviourSelect = viewModel::onObservableBehaviourSelect,
+        onGenerateDebrief = onGenerateDebrief,
         onDone = onDone
     )
 }
@@ -119,8 +130,10 @@ private fun CaptureContent(
     onDeleteField: (key: String) -> Unit,
     onCmTagSelect: (key: String, cmTag: CmTag) -> Unit,
     onObservableBehaviourSelect: (key: String, observableBehaviourId: Long?) -> Unit,
+    onGenerateDebrief: (CrewMember) -> Unit,
     onDone: () -> Unit,
 ) {
+    var pickingCrewMember by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     Scaffold(snackbarHost = { UndoSnackbarHost(hostState = snackbarHostState) }) { innerPadding ->
         val session = state.session ?: return@Scaffold
@@ -159,12 +172,107 @@ private fun CaptureContent(
                         }
                     }
                 }
+                PrimaryButton(
+                    text = stringResource(R.string.capture_generate_debrief),
+                    onClick = {
+                        if (session.hasTwoCrewMembers) {
+                            pickingCrewMember = true
+                        } else {
+                            onGenerateDebrief(session.crewMembers.single())
+                        }
+                    },
+                    icon = painterResource(R.drawable.ic_debrief),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 32.dp)
+                )
                 SecondaryButton(
                     text = stringResource(R.string.capture_done),
                     onClick = onDone,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 24.dp)
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp)
                 )
             }
+        }
+        if (pickingCrewMember) {
+            PickCrewMemberDialog(
+                session = session,
+                onPick = { crewMember ->
+                    pickingCrewMember = false
+                    onGenerateDebrief(crewMember)
+                },
+                onDismiss = { pickingCrewMember = false }
+            )
+        }
+    }
+}
+
+/** Asks which Crew Member's Debrief to generate, in a Session with two. */
+@Composable
+private fun PickCrewMemberDialog(
+    session: Session,
+    onPick: (CrewMember) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
+            Column(modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 12.dp)) {
+                Text(
+                    text = stringResource(R.string.capture_generate_debrief),
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Text(
+                    text = stringResource(R.string.capture_which_crew_member),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 20.dp)
+                )
+                session.crewMembers.forEach { crewMember ->
+                    session.staffNumberOf(crewMember)?.let { staffNumber ->
+                        CrewMemberChoice(
+                            crewMember = crewMember,
+                            staffNumber = staffNumber,
+                            onClick = { onPick(crewMember) },
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                    }
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End).padding(top = 8.dp)) {
+                    Text(text = stringResource(R.string.cancel), style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CrewMemberChoice(
+    crewMember: CrewMember,
+    staffNumber: StaffNumber,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val slot = crewMember.slot
+    Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().heightIn(min = 72.dp),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(width = 1.dp, color = slot.color)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CrewMemberDot(slot = slot, modifier = Modifier.size(16.dp))
+            Text(
+                text = stringResource(R.string.capture_crew_member_debrief, stringResource(slot.label)),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = staffNumber.digits,
+                style = CheckPilotTheme.monoTypography.extraSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -397,28 +505,6 @@ private fun CmTagOption(
     }
 }
 
-/** Says which Crew Member a Note that isn't about both is about; it can't be tapped. */
-@Composable
-private fun CmTagBadge(
-    cmTag: CmTag,
-    modifier: Modifier = Modifier,
-) {
-    val slot = cmTag.slot ?: return
-    val colors = CheckPilotTheme.colors
-    val color = if (slot == CrewMemberSlot.CM1) colors.crewMember1 else colors.crewMember2
-    Row(
-        modifier =
-            modifier
-                .border(width = 1.dp, color = color, shape = MaterialTheme.shapes.large)
-                .padding(horizontal = 10.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        CrewMemberDot(slot = slot, modifier = Modifier.size(8.dp))
-        Text(text = stringResource(slot.label), style = MaterialTheme.typography.labelMedium, color = color)
-    }
-}
-
 @Composable
 private fun ObservableBehaviourDropdown(
     selected: ObservableBehaviour?,
@@ -494,22 +580,6 @@ private fun ObservableBehaviourLabel(
         modifier = modifier
     )
 }
-
-private val CmTag.label: Int
-    @StringRes get() =
-        when (this) {
-            CmTag.CM1 -> R.string.crew_member_1
-            CmTag.CM2 -> R.string.crew_member_2
-            CmTag.BOTH -> R.string.crew_member_both
-        }
-
-private val CmTag.slot: CrewMemberSlot?
-    get() =
-        when (this) {
-            CmTag.CM1 -> CrewMemberSlot.CM1
-            CmTag.CM2 -> CrewMemberSlot.CM2
-            CmTag.BOTH -> null
-        }
 
 private fun Modifier.dashedBorder(
     color: Color,

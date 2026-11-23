@@ -7,7 +7,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.mebiad.checkpilot.domain.session.CrewMember
 import com.mebiad.checkpilot.ui.apps.capture.CaptureScreen
+import com.mebiad.checkpilot.ui.apps.debrief.DebriefScreen
 import com.mebiad.checkpilot.ui.apps.home.HomeScreen
 import com.mebiad.checkpilot.ui.apps.setup.SetupScreen
 import kotlinx.serialization.Serializable
@@ -23,6 +25,12 @@ data object Setup : NavKey
 @Serializable
 data class Capture(
     val sessionId: String,
+) : NavKey
+
+@Serializable
+data class Debrief(
+    val sessionId: String,
+    val crewMember: CrewMember,
 ) : NavKey
 
 @Composable
@@ -59,7 +67,14 @@ fun AppNavigation() {
                 entry<Capture> { key ->
                     CaptureScreen(
                         viewModel = koinViewModel { parametersOf(key.sessionId) },
+                        onGenerateDebrief = { crewMember -> backStack.add(Debrief(key.sessionId, crewMember)) },
                         onDone = { backStack.removeAll { it != Home } }
+                    )
+                }
+                entry<Debrief> { key ->
+                    DebriefScreen(
+                        viewModel = koinViewModel { parametersOf(key.sessionId, key.crewMember) },
+                        onLeave = { backStack.removeLastOrNull() }
                     )
                 }
             }

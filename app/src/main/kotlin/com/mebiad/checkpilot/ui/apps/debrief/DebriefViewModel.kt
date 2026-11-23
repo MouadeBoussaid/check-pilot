@@ -11,6 +11,7 @@ import com.mebiad.checkpilot.domain.session.CrewMember
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecase
 import com.mebiad.checkpilot.domain.session.Session
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,7 +19,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 
@@ -52,17 +57,29 @@ class DebriefViewModel(
     private val mutableEvents = MutableSharedFlow<DebriefEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<DebriefEvent> = mutableEvents.asSharedFlow()
 
+    private val session = observeSession.session(sessionId).shareIn(viewModelScope, SharingStarted.WhileSubscribed(), 1)
+
+    // Every Crew Member's Debrief is watched, so the toggle switches without a moment of an empty Debrief.
+    private val debriefs: Flow<Map<CrewMember, Debrief>> =
+        session
+            .map { it?.crewMembers.orEmpty() }
+            .distinctUntilChanged()
+            .flatMapLatest { crewMembers ->
+                if (crewMembers.isEmpty()) {
+                    flowOf(emptyMap())
+                } else {
+                    combine(crewMembers.map { observeDebrief.debrief(sessionId, it) }) { debriefs ->
+                        debriefs.associateBy { it.crewMember }
+                    }
+                }
+            }
+
     val state: StateFlow<DebriefUiState> =
-        combine(
-            selected,
-            observeSession.session(sessionId),
-            selected.flatMapLatest { observeDebrief.debrief(sessionId, it) },
-            ungradedWarning
-        ) { selected, session, debrief, ungradedWarning ->
+        combine(selected, session, debriefs, ungradedWarning) { selected, session, debriefs, ungradedWarning ->
             DebriefUiState(
                 selected = selected,
                 session = session,
-                debrief = debrief.takeIf { it.crewMember == selected },
+                debrief = debriefs[selected],
                 ungradedWarning = ungradedWarning
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), DebriefUiState(crewMember))

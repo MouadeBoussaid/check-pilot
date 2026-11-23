@@ -75,9 +75,10 @@ fun DateField(
     }
 }
 
+/** The Session date picker, starting on [initial]; [onPick] gets the date picked with OK. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PickDateDialog(
+fun PickDateDialog(
     initial: LocalDate,
     onPick: (LocalDate) -> Unit,
     onDismiss: () -> Unit,

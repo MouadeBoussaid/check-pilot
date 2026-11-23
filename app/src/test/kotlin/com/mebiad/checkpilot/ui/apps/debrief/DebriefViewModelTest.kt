@@ -83,6 +83,24 @@ class DebriefViewModelTest {
         }
 
     @Test
+    fun switchingCrewMemberNeverShowsTheDebriefEmpty() =
+        runTest {
+            // Given
+            observeSession.sessions.value = listOf(session)
+            observeDebrief.debriefs.value = mapOf(cm1Debrief, cm2Debrief)
+            val viewModel = subscribedViewModel(crewMember = CrewMember.CM1)
+            val states = mutableListOf<DebriefUiState>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect { states += it } }
+
+            // When
+            viewModel.onSelect(CrewMember.CM2)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(listOf(cm1Debrief.second, cm2Debrief.second), states.map { it.debrief })
+        }
+
+    @Test
     fun aGradeIsSetForTheSelectedCrewMember() =
         runTest {
             // Given

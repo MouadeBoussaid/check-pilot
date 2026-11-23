@@ -12,22 +12,33 @@ import com.mebiad.checkpilot.data.local.crypto.KeystorePassphraseCipherImpl
 import com.mebiad.checkpilot.data.local.crypto.PassphraseCipher
 import com.mebiad.checkpilot.data.local.db.CatalogueRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.CheckPilotDatabase
+import com.mebiad.checkpilot.data.local.db.GradeRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.NoteRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.SessionRepositoryImpl
 import com.mebiad.checkpilot.domain.catalogue.CatalogueRepository
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecase
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecaseImpl
+import com.mebiad.checkpilot.domain.debrief.ObserveDebriefUsecase
+import com.mebiad.checkpilot.domain.debrief.ObserveDebriefUsecaseImpl
+import com.mebiad.checkpilot.domain.grade.GradeRepository
+import com.mebiad.checkpilot.domain.grade.ObserveGradesUsecase
+import com.mebiad.checkpilot.domain.grade.ObserveGradesUsecaseImpl
+import com.mebiad.checkpilot.domain.grade.SetGradeUsecase
+import com.mebiad.checkpilot.domain.grade.SetGradeUsecaseImpl
 import com.mebiad.checkpilot.domain.note.EditNotesUsecase
 import com.mebiad.checkpilot.domain.note.EditNotesUsecaseImpl
 import com.mebiad.checkpilot.domain.note.NoteRepository
 import com.mebiad.checkpilot.domain.note.ObserveNotesUsecase
 import com.mebiad.checkpilot.domain.note.ObserveNotesUsecaseImpl
+import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecase
+import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecase
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecaseImpl
 import com.mebiad.checkpilot.domain.session.SessionRepository
 import com.mebiad.checkpilot.domain.session.StartSessionUsecase
 import com.mebiad.checkpilot.domain.session.StartSessionUsecaseImpl
 import com.mebiad.checkpilot.ui.apps.capture.CaptureViewModel
+import com.mebiad.checkpilot.ui.apps.debrief.DebriefViewModel
 import com.mebiad.checkpilot.ui.apps.home.HomeViewModel
 import com.mebiad.checkpilot.ui.apps.setup.SetupViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -80,6 +91,13 @@ val domainModule =
         single<ObserveNotesUsecase> { ObserveNotesUsecaseImpl(repository = get()) }
         // One writer for the whole app keeps every Note write in call order.
         single<EditNotesUsecase> { EditNotesUsecaseImpl(repository = get(), catalogue = get()) }
+        single<ChangeSessionDateUsecase> { ChangeSessionDateUsecaseImpl(repository = get()) }
+        single<GradeRepository> { GradeRepositoryImpl(dao = get<CheckPilotDatabase>().gradeDao()) }
+        single<ObserveGradesUsecase> { ObserveGradesUsecaseImpl(repository = get()) }
+        single<SetGradeUsecase> { SetGradeUsecaseImpl(repository = get()) }
+        single<ObserveDebriefUsecase> {
+            ObserveDebriefUsecaseImpl(catalogue = get(), notes = get(), grades = get())
+        }
     }
 
 val uiModule =
@@ -87,6 +105,7 @@ val uiModule =
         viewModelOf(::HomeViewModel)
         viewModelOf(::SetupViewModel)
         viewModelOf(::CaptureViewModel)
+        viewModelOf(::DebriefViewModel)
     }
 
 val mainModules = listOf(coreModule, dataModule, domainModule, uiModule)
