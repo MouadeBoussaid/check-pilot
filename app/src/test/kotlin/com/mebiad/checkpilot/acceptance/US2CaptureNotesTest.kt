@@ -246,7 +246,7 @@ class US2CaptureNotesTest {
         // Then
         composeRule.waitUntilAtLeastOneExists(hasText("New Session", ignoreCase = true), TIMEOUT_MS)
         composeRule.onNodeWithText(CONTINUE, ignoreCase = true).assertExists()
-        composeRule.onNodeWithText(ROUTE).assertDoesNotExist()
+        composeRule.onNodeWithText("Done").assertDoesNotExist()
     }
 
     private fun openLastSession() {
