@@ -1,5 +1,8 @@
 package com.mebiad.checkpilot.domain.note
 
+import com.mebiad.checkpilot.domain.catalogue.CatalogueRepositoryFake
+import com.mebiad.checkpilot.domain.catalogue.Competency
+import com.mebiad.checkpilot.domain.catalogue.ObservableBehaviour
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -9,9 +12,22 @@ import org.junit.Test
 class EditNotesUsecaseImplTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = NoteRepositoryFake()
+    private val catalogue =
+        CatalogueRepositoryFake().apply {
+            competencies.value =
+                listOf(
+                    Competency(id = 1, name = "Competency 1", observableBehaviours = listOf(OBS_1A)),
+                    Competency(id = 3, name = "Competency 3", observableBehaviours = listOf(OBS_3C))
+                )
+        }
     private val ids = ArrayDeque(listOf("note-1", "note-2", "note-3"))
     private val usecase =
-        EditNotesUsecaseImpl(repository = repository, newId = { ids.removeFirst() }, dispatcher = dispatcher)
+        EditNotesUsecaseImpl(
+            repository = repository,
+            catalogue = catalogue,
+            newId = { ids.removeFirst() },
+            dispatcher = dispatcher
+        )
 
     @Test
     fun addReturnsTheNewIdAndSavesTheNoteTaggedBothAtTheEndOfItsCompetency() =
@@ -53,6 +69,54 @@ class EditNotesUsecaseImplTest {
 
             // Then
             assertEquals("Late flaps", repository.notes.single { it.id == id }.text)
+        }
+
+    @Test
+    fun setCmTagTagsOnlyThatNote() =
+        runTest(dispatcher) {
+            // Given
+            repository.insert(note(id = "first", competencyId = 1, sortIndex = 0))
+            repository.insert(note(id = "second", competencyId = 1, sortIndex = 1))
+
+            // When
+            usecase.setCmTag(id = "first", cmTag = CmTag.CM1)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(listOf(CmTag.CM1, CmTag.CM2), repository.notes.map { it.cmTag })
+        }
+
+    @Test
+    fun setObservableBehaviourLinksOneOfTheNotesCompetencyAndNullUnlinksIt() =
+        runTest(dispatcher) {
+            // Given
+            repository.insert(note(id = "first", competencyId = 3, sortIndex = 0).copy(observableBehaviourId = null))
+            repository.insert(note(id = "second", competencyId = 3, sortIndex = 1))
+
+            // When / Then: linked
+            usecase.setObservableBehaviour(id = "first", observableBehaviourId = OBS_3C.id)
+            advanceUntilIdle()
+            assertEquals(listOf(OBS_3C.id, 7L), repository.notes.map { it.observableBehaviourId })
+
+            // When / Then: unlinked
+            usecase.setObservableBehaviour(id = "first", observableBehaviourId = null)
+            advanceUntilIdle()
+            assertEquals(listOf(null, 7L), repository.notes.map { it.observableBehaviourId })
+        }
+
+    @Test
+    fun setObservableBehaviourIgnoresAnObsBehOfAnotherCompetencyOrNotInTheCatalogue() =
+        runTest(dispatcher) {
+            // Given
+            repository.insert(note(id = "first", competencyId = 3, sortIndex = 0))
+
+            // When
+            usecase.setObservableBehaviour(id = "first", observableBehaviourId = OBS_1A.id)
+            usecase.setObservableBehaviour(id = "first", observableBehaviourId = 999L)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(7L, repository.notes.single().observableBehaviourId)
         }
 
     @Test
@@ -135,5 +199,7 @@ class EditNotesUsecaseImplTest {
 
     private companion object {
         const val SESSION_ID = "session-1"
+        val OBS_1A = ObservableBehaviour(id = 11, competencyId = 1, name = "1a")
+        val OBS_3C = ObservableBehaviour(id = 33, competencyId = 3, name = "3c")
     }
 }

@@ -64,6 +64,23 @@ class NoteRepositoryImplTest {
         }
 
     @Test
+    fun findReturnsTheNoteWithThatIdOrNull() =
+        runTest {
+            // Given
+            val note = note(id = "a", sortIndex = 1, cmTag = CmTag.CM2, observableBehaviourId = 3)
+            repository.insert(note)
+            repository.insert(note(id = "b", sortIndex = 2))
+
+            // When
+            val found = repository.find("a")
+            val missing = repository.find("missing")
+
+            // Then
+            assertEquals(note, found)
+            assertEquals(null, missing)
+        }
+
+    @Test
     fun updatingTheTextChangesOnlyThatNotesText() =
         runTest {
             // Given
@@ -77,6 +94,47 @@ class NoteRepositoryImplTest {
             // Then
             assertEquals(
                 listOf(note.copy(text = "Late flaps"), note(id = "b", sortIndex = 2)),
+                repository.observe("session-1").first()
+            )
+        }
+
+    @Test
+    fun updatingTheCmTagChangesOnlyThatNotesCmTag() =
+        runTest {
+            // Given
+            val note = note(id = "a", sortIndex = 1, observableBehaviourId = 3)
+            repository.insert(note)
+            repository.insert(note(id = "b", sortIndex = 2))
+
+            // When
+            repository.updateCmTag(id = "a", cmTag = CmTag.CM2)
+
+            // Then
+            assertEquals(
+                listOf(note.copy(cmTag = CmTag.CM2), note(id = "b", sortIndex = 2)),
+                repository.observe("session-1").first()
+            )
+        }
+
+    @Test
+    fun updatingTheObservableBehaviourSetsAndClearsOnlyThatNotesObservableBehaviour() =
+        runTest {
+            // Given
+            val note = note(id = "a", sortIndex = 1, cmTag = CmTag.CM1)
+            repository.insert(note)
+            repository.insert(note(id = "b", sortIndex = 2, observableBehaviourId = 2))
+
+            // When / Then: set
+            repository.updateObservableBehaviour(id = "a", observableBehaviourId = 3)
+            assertEquals(
+                listOf(note.copy(observableBehaviourId = 3), note(id = "b", sortIndex = 2, observableBehaviourId = 2)),
+                repository.observe("session-1").first()
+            )
+
+            // When / Then: cleared
+            repository.updateObservableBehaviour(id = "a", observableBehaviourId = null)
+            assertEquals(
+                listOf(note, note(id = "b", sortIndex = 2, observableBehaviourId = 2)),
                 repository.observe("session-1").first()
             )
         }

@@ -12,4 +12,7 @@ data class Session(
     val cm2StaffNumber: StaffNumber?,
     val departure: AirportCode,
     val destination: AirportCode,
-)
+) {
+    val hasTwoCrewMembers: Boolean
+        get() = cm1StaffNumber != null && cm2StaffNumber != null
+}

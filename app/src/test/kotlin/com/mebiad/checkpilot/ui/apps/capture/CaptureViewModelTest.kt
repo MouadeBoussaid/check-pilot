@@ -1,6 +1,7 @@
 package com.mebiad.checkpilot.ui.apps.capture
 
 import com.mebiad.checkpilot.domain.catalogue.Competency
+import com.mebiad.checkpilot.domain.catalogue.ObservableBehaviour
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecaseFake
 import com.mebiad.checkpilot.domain.note.CmTag
 import com.mebiad.checkpilot.domain.note.EditNotesUsecaseFake
@@ -64,6 +65,130 @@ class CaptureViewModelTest {
             assertEquals(listOf(""), state.textsOf(2))
             assertEquals(listOf("Checklist read silently", "Late flaps", ""), state.textsOf(1))
             assertEquals(listOf(true, true, false), state.fieldsOf(1).map { it.isNote })
+        }
+
+    @Test
+    fun theCmTagsShowOnlyInASessionWithTwoCrewMembers() =
+        runTest {
+            // Given
+            observeSession.sessions.value = listOf(session)
+            val viewModel = subscribedViewModel()
+
+            // When / Then: one Crew Member
+            assertEquals(false, viewModel.state.value.showCmTags)
+
+            // When / Then: two Crew Members
+            observeSession.sessions.value = listOf(session.copy(cm2StaffNumber = StaffNumber.parse("04512")))
+            advanceUntilIdle()
+            assertEquals(true, viewModel.state.value.showCmTags)
+        }
+
+    @Test
+    fun eachNoteShowsItsCmTagAndObsBehAndTheCompetencyItsLinkedObsBehOnceInCatalogueOrder() =
+        runTest {
+            // Given
+            observeSession.sessions.value = listOf(session)
+            observeCatalogue.competencies.value = listOf(competency3)
+            observeNotes.notes.value =
+                listOf(
+                    note(id = "a", sortIndex = 0, competencyId = 3, observableBehaviourId = OBS_3C.id),
+                    note(id = "b", sortIndex = 1, competencyId = 3, observableBehaviourId = OBS_3A.id),
+                    note(id = "c", sortIndex = 2, competencyId = 3, observableBehaviourId = OBS_3C.id),
+                    note(id = "d", sortIndex = 3, competencyId = 3, observableBehaviourId = null, cmTag = CmTag.BOTH)
+                )
+
+            // When
+            val viewModel = subscribedViewModel()
+
+            // Then
+            val fields = viewModel.state.value.fieldsOf(3)
+            assertEquals(listOf(CmTag.CM2, CmTag.CM2, CmTag.CM2, CmTag.BOTH, CmTag.BOTH), fields.map { it.cmTag })
+            assertEquals(listOf(OBS_3C, OBS_3A, OBS_3C, null, null), fields.map { it.observableBehaviour })
+            assertEquals(
+                listOf(OBS_3A, OBS_3C),
+                viewModel.state.value
+                    .competencyOf(3)
+                    .linkedObservableBehaviours
+            )
+        }
+
+    @Test
+    fun selectingACmTagSavesItAndShowsItBeforeTheDatabaseHasIt() =
+        runTest {
+            // Given
+            observeSession.sessions.value = listOf(session)
+            observeCatalogue.competencies.value = listOf(Competency(id = 1, name = "Leadership"))
+            val viewModel = subscribedViewModel()
+            val key =
+                viewModel.state.value
+                    .fieldsOf(1)
+                    .single()
+                    .key
+            viewModel.onFieldTextChange(competencyId = 1, key = key, text = "L")
+
+            // When
+            viewModel.onCmTagSelect(key = key, cmTag = CmTag.CM1)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(EditNotesUsecaseFake.Call.SetCmTag(id = "added-1", cmTag = CmTag.CM1), editNotes.calls.last())
+            assertEquals(
+                CmTag.CM1,
+                viewModel.state.value
+                    .fieldsOf(1)[0]
+                    .cmTag
+            )
+        }
+
+    @Test
+    fun selectingAnObsBehSavesItAndShowsItBeforeTheDatabaseHasIt() =
+        runTest {
+            // Given
+            observeSession.sessions.value = listOf(session)
+            observeCatalogue.competencies.value = listOf(competency3)
+            observeNotes.notes.value =
+                listOf(note(id = "a", sortIndex = 0, competencyId = 3, observableBehaviourId = OBS_3C.id))
+            val viewModel = subscribedViewModel()
+
+            // When / Then: none
+            viewModel.onObservableBehaviourSelect(key = "a", observableBehaviourId = null)
+            advanceUntilIdle()
+            assertEquals(
+                EditNotesUsecaseFake.Call.SetObservableBehaviour(id = "a", observableBehaviourId = null),
+                editNotes.calls.last()
+            )
+            assertEquals(
+                null,
+                viewModel.state.value
+                    .fieldsOf(3)[0]
+                    .observableBehaviour
+            )
+            assertEquals(
+                emptyList<ObservableBehaviour>(),
+                viewModel.state.value
+                    .competencyOf(3)
+                    .linkedObservableBehaviours
+            )
+
+            // When / Then: 3b
+            viewModel.onObservableBehaviourSelect(key = "a", observableBehaviourId = OBS_3B.id)
+            advanceUntilIdle()
+            assertEquals(
+                EditNotesUsecaseFake.Call.SetObservableBehaviour(id = "a", observableBehaviourId = OBS_3B.id),
+                editNotes.calls.last()
+            )
+            assertEquals(
+                OBS_3B,
+                viewModel.state.value
+                    .fieldsOf(3)[0]
+                    .observableBehaviour
+            )
+            assertEquals(
+                listOf(OBS_3B),
+                viewModel.state.value
+                    .competencyOf(3)
+                    .linkedObservableBehaviours
+            )
         }
 
     @Test
@@ -280,6 +405,36 @@ class CaptureViewModelTest {
         }
 
     @Test
+    fun undoAfterADeleteRestoresTheNoteWithTheCmTagAndObsBehItShowed() =
+        runTest {
+            // Given
+            observeSession.sessions.value = listOf(session)
+            observeCatalogue.competencies.value = listOf(competency3)
+            val saved = note(id = "a", sortIndex = 0, competencyId = 3, observableBehaviourId = OBS_3C.id)
+            observeNotes.notes.value = listOf(saved)
+            val viewModel = subscribedViewModel()
+            val events = eventsOf(viewModel)
+            viewModel.onCmTagSelect(key = "a", cmTag = CmTag.CM1)
+            viewModel.onObservableBehaviourSelect(key = "a", observableBehaviourId = OBS_3B.id)
+            viewModel.onDeleteField("a")
+            advanceUntilIdle()
+            val erased = events.filterIsInstance<CaptureEvent.NoteErased>().single()
+
+            // When
+            viewModel.undo(erased.token)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(
+                EditNotesUsecaseFake.Call.Restore(saved.copy(cmTag = CmTag.CM1, observableBehaviourId = OBS_3B.id)),
+                editNotes.calls.last()
+            )
+            val field = viewModel.state.value.fieldsOf(3)[0]
+            assertEquals(CmTag.CM1, field.cmTag)
+            assertEquals(OBS_3B, field.observableBehaviour)
+        }
+
+    @Test
     fun aNewerEraseMakesTheOlderOneFinal() =
         runTest {
             // Given
@@ -359,8 +514,10 @@ class CaptureViewModelTest {
         return events
     }
 
-    private fun CaptureUiState.fieldsOf(competencyId: Long): List<NoteField> =
-        competencies.single { it.competency.id == competencyId }.fields
+    private fun CaptureUiState.competencyOf(competencyId: Long): CompetencyNotes =
+        competencies.single { it.competency.id == competencyId }
+
+    private fun CaptureUiState.fieldsOf(competencyId: Long): List<NoteField> = competencyOf(competencyId).fields
 
     private fun CaptureUiState.textsOf(competencyId: Long): List<String> = fieldsOf(competencyId).map { it.text }
 
@@ -369,17 +526,24 @@ class CaptureViewModelTest {
         sortIndex: Long,
         text: String = "Checklist read silently",
         competencyId: Long = 1,
+        cmTag: CmTag = CmTag.CM2,
+        observableBehaviourId: Long? = 7,
     ) = Note(
         id = id,
         sessionId = SESSION_ID,
         competencyId = competencyId,
         text = text,
-        cmTag = CmTag.CM2,
-        observableBehaviourId = 7,
+        cmTag = cmTag,
+        observableBehaviourId = observableBehaviourId,
         sortIndex = sortIndex
     )
 
     private companion object {
         const val SESSION_ID = "session-1"
+        val OBS_3A = ObservableBehaviour(id = 31, competencyId = 3, name = "3a")
+        val OBS_3B = ObservableBehaviour(id = 32, competencyId = 3, name = "3b")
+        val OBS_3C = ObservableBehaviour(id = 33, competencyId = 3, name = "3c")
+        val competency3 =
+            Competency(id = 3, name = "Situation awareness", observableBehaviours = listOf(OBS_3A, OBS_3B, OBS_3C))
     }
 }

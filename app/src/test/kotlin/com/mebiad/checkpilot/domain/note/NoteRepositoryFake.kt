@@ -20,6 +20,8 @@ class NoteRepositoryFake : NoteRepository {
     override fun observe(sessionId: String): Flow<List<Note>> =
         notesState.map { notes -> notes.filter { it.sessionId == sessionId }.sortedBy { it.sortIndex } }
 
+    override suspend fun find(id: String): Note? = notes.singleOrNull { it.id == id }
+
     override suspend fun insert(note: Note) {
         delay(insertDelayMs)
         check(note.id !in failingIds) { "Insert of ${note.id} failed" }
@@ -31,6 +33,21 @@ class NoteRepositoryFake : NoteRepository {
         text: String,
     ) {
         notesState.value = notesState.value.map { if (it.id == id) it.copy(text = text) else it }
+    }
+
+    override suspend fun updateCmTag(
+        id: String,
+        cmTag: CmTag,
+    ) {
+        notesState.value = notesState.value.map { if (it.id == id) it.copy(cmTag = cmTag) else it }
+    }
+
+    override suspend fun updateObservableBehaviour(
+        id: String,
+        observableBehaviourId: Long?,
+    ) {
+        notesState.value =
+            notesState.value.map { if (it.id == id) it.copy(observableBehaviourId = observableBehaviourId) else it }
     }
 
     override suspend fun delete(id: String) {
