@@ -14,12 +14,24 @@ class NoteRepositoryImpl(
     override fun observe(sessionId: String): Flow<List<Note>> =
         dao.observe(sessionId).map { notes -> notes.map { it.toNote() } }
 
+    override suspend fun find(id: String): Note? = dao.find(id)?.toNote()
+
     override suspend fun insert(note: Note) = dao.insert(note.toEntity())
 
     override suspend fun updateText(
         id: String,
         text: String,
     ) = dao.updateText(id = id, text = text)
+
+    override suspend fun updateCmTag(
+        id: String,
+        cmTag: CmTag,
+    ) = dao.updateCmTag(id = id, cmTag = cmTag.name)
+
+    override suspend fun updateObservableBehaviour(
+        id: String,
+        observableBehaviourId: Long?,
+    ) = dao.updateObservableBehaviour(id = id, observableBehaviourId = observableBehaviourId)
 
     override suspend fun delete(id: String) = dao.delete(id)
 

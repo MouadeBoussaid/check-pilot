@@ -2,6 +2,7 @@ package com.mebiad.checkpilot.data.local.db
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.mebiad.checkpilot.domain.catalogue.ObservableBehaviour
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -45,5 +46,42 @@ class CatalogueRepositoryImplTest {
                 competencies.map { it.id }
             )
             assertEquals("Competency 9", competencies.first().name)
+        }
+
+    @Test
+    fun eachCompetencyComesWithItsOwnObservableBehavioursInCatalogueOrder() =
+        runTest {
+            // Given: 3g moved to the top of Competency 3's OBS BEH
+            database.openHelper.writableDatabase.execSQL(
+                "UPDATE observable_behaviour SET sortIndex = -1 WHERE name = '3g'"
+            )
+
+            // When
+            val competency3 = repository.observeCompetencies().first().single { it.id == 3L }
+
+            // Then
+            assertEquals(
+                listOf("3g", "3a", "3b", "3c", "3d", "3e", "3f"),
+                competency3.observableBehaviours.map { it.name }
+            )
+            assertEquals(setOf(3L), competency3.observableBehaviours.map { it.competencyId }.toSet())
+        }
+
+    @Test
+    fun findObservableBehaviourReturnsItWithItsCompetencyOrNull() =
+        runTest {
+            // Given
+            val observable3c =
+                repository.observeCompetencies().first().single { it.id == 3L }.observableBehaviours.single {
+                    it.name == "3c"
+                }
+
+            // When
+            val found = repository.findObservableBehaviour(observable3c.id)
+            val missing = repository.findObservableBehaviour(9999L)
+
+            // Then
+            assertEquals(ObservableBehaviour(id = observable3c.id, competencyId = 3L, name = "3c"), found)
+            assertEquals(null, missing)
         }
 }

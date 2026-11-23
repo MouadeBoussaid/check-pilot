@@ -14,6 +14,20 @@ interface EditNotesUsecase {
         text: String,
     )
 
+    fun setCmTag(
+        id: String,
+        cmTag: CmTag,
+    )
+
+    /**
+     * Links the OBS BEH [observableBehaviourId] to the Note, or unlinks its OBS BEH when null. An OBS BEH of another
+     * Competency than the Note's is ignored.
+     */
+    fun setObservableBehaviour(
+        id: String,
+        observableBehaviourId: Long?,
+    )
+
     fun delete(id: String)
 
     /** Writes back a Note as it was, with its id, CM Tag, OBS BEH, Competency and place, as Undo does. */

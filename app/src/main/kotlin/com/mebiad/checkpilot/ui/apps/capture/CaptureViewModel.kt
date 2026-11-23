@@ -3,7 +3,9 @@ package com.mebiad.checkpilot.ui.apps.capture
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mebiad.checkpilot.domain.catalogue.Competency
+import com.mebiad.checkpilot.domain.catalogue.ObservableBehaviour
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecase
+import com.mebiad.checkpilot.domain.note.CmTag
 import com.mebiad.checkpilot.domain.note.EditNotesUsecase
 import com.mebiad.checkpilot.domain.note.Note
 import com.mebiad.checkpilot.domain.note.ObserveNotesUsecase
@@ -18,14 +20,18 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
+/** [showCmTags] is true in a Session with two Crew Members, where each Note says which one it is about. */
 data class CaptureUiState(
     val session: Session? = null,
     val competencies: List<CompetencyNotes> = emptyList(),
+    val showCmTags: Boolean = false,
 )
 
+/** [linkedObservableBehaviours] are the OBS BEH its Notes link, each once, in Catalogue order. */
 data class CompetencyNotes(
     val competency: Competency,
     val fields: List<NoteField>,
+    val linkedObservableBehaviours: List<ObservableBehaviour> = emptyList(),
 )
 
 /**
@@ -36,6 +42,8 @@ data class NoteField(
     val key: String,
     val text: String,
     val isNote: Boolean,
+    val cmTag: CmTag = CmTag.BOTH,
+    val observableBehaviour: ObservableBehaviour? = null,
 )
 
 sealed interface CaptureEvent {
@@ -51,6 +59,7 @@ sealed interface CaptureEvent {
  * text of each Note ([texts]). A Note typed into the empty field keeps that field's key ([keys]); [emptyFieldCounts]
  * gives each Competency's empty field a fresh key after it became a Note. [hidden] holds the ids of erased Notes,
  * [restored] the copies Undo wrote back, by id, and [textsBeforeEmptied] what each Note said before it was emptied.
+ * [cmTags] and [observableBehaviours] hold the latest selected CM Tag and OBS BEH id of each Note, null for none.
  */
 private data class Overlay(
     val added: Map<String, Long> = emptyMap(),
@@ -60,7 +69,14 @@ private data class Overlay(
     val hidden: Set<String> = emptySet(),
     val restored: Map<String, Note> = emptyMap(),
     val textsBeforeEmptied: Map<String, String> = emptyMap(),
+    val cmTags: Map<String, CmTag> = emptyMap(),
+    val observableBehaviours: Map<String, Long?> = emptyMap(),
 ) {
+    fun observableBehaviourIdOf(
+        noteId: String,
+        saved: Long?,
+    ): Long? = if (noteId in observableBehaviours) observableBehaviours[noteId] else saved
+
     fun emptyFieldKey(competencyId: Long): String = "new-$competencyId-${emptyFieldCounts[competencyId] ?: 0}"
 
     fun keyOf(noteId: String): String = keys[noteId] ?: noteId
@@ -97,6 +113,7 @@ class CaptureViewModel(
         ) { session, competencies, notes, overlay ->
             CaptureUiState(
                 session = session,
+                showCmTags = session?.hasTwoCrewMembers == true,
                 competencies = competencies.map { competency -> competency.withFields(notes, overlay) }
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), CaptureUiState())
@@ -137,6 +154,30 @@ class CaptureViewModel(
                         current.textsBeforeEmptied
                     }
             )
+    }
+
+    fun onCmTagSelect(
+        key: String,
+        cmTag: CmTag,
+    ) {
+        val current = overlay.value
+        val id = current.noteIdOf(key)
+        if (textOf(id) == null) return
+        editNotes.setCmTag(id = id, cmTag = cmTag)
+        overlay.value = current.copy(cmTags = current.cmTags + (id to cmTag))
+    }
+
+    /** Links the OBS BEH [observableBehaviourId] to the Note in [key], or unlinks its OBS BEH when null. */
+    fun onObservableBehaviourSelect(
+        key: String,
+        observableBehaviourId: Long?,
+    ) {
+        val current = overlay.value
+        val id = current.noteIdOf(key)
+        if (textOf(id) == null) return
+        editNotes.setObservableBehaviour(id = id, observableBehaviourId = observableBehaviourId)
+        overlay.value =
+            current.copy(observableBehaviours = current.observableBehaviours + (id to observableBehaviourId))
     }
 
     /** Erases the Note in [key] if it was left empty. */
@@ -186,7 +227,17 @@ class CaptureViewModel(
         id: String,
         undoText: String?,
     ) {
-        val copy = savedNoteOf(id)?.let { row -> undoText?.takeIf { it.isNotEmpty() }?.let { row.copy(text = it) } }
+        val current = overlay.value
+        val copy =
+            savedNoteOf(id)?.let { row ->
+                undoText?.takeIf { it.isNotEmpty() }?.let {
+                    row.copy(
+                        text = it,
+                        cmTag = current.cmTags[id] ?: row.cmTag,
+                        observableBehaviourId = current.observableBehaviourIdOf(id, row.observableBehaviourId)
+                    )
+                }
+            }
         editNotes.delete(id)
         overlay.value = overlay.value.let { it.copy(hidden = it.hidden + id) }
         if (copy == null) return
@@ -205,7 +256,6 @@ class CaptureViewModel(
             (notes + restored)
                 .filter { it.competencyId == id && it.id !in overlay.hidden }
                 .sortedBy { it.sortIndex }
-                .map { it.id to it.text }
         val unsaved =
             overlay.added
                 .filter { (noteId, competencyId) ->
@@ -213,14 +263,37 @@ class CaptureViewModel(
                         noteId !in overlay.hidden
                 }.keys
         val noteFields =
-            (saved + unsaved.map { it to "" }).map { (noteId, text) ->
-                NoteField(key = overlay.keyOf(noteId), text = overlay.texts[noteId] ?: text, isNote = true)
-            }
+            saved.map { note ->
+                NoteField(
+                    key = overlay.keyOf(note.id),
+                    text = overlay.texts[note.id] ?: note.text,
+                    isNote = true,
+                    cmTag = overlay.cmTags[note.id] ?: note.cmTag,
+                    observableBehaviour =
+                        observableBehaviourOf(
+                            overlay.observableBehaviourIdOf(note.id, note.observableBehaviourId)
+                        )
+                )
+            } +
+                unsaved.map { noteId ->
+                    NoteField(
+                        key = overlay.keyOf(noteId),
+                        text = overlay.texts[noteId] ?: "",
+                        isNote = true,
+                        cmTag = overlay.cmTags[noteId] ?: CmTag.BOTH,
+                        observableBehaviour = observableBehaviourOf(overlay.observableBehaviourIdOf(noteId, null))
+                    )
+                }
+        val linked = noteFields.mapNotNull { it.observableBehaviour }.toSet()
         return CompetencyNotes(
             competency = this,
-            fields = noteFields + NoteField(key = overlay.emptyFieldKey(id), text = "", isNote = false)
+            fields = noteFields + NoteField(key = overlay.emptyFieldKey(id), text = "", isNote = false),
+            linkedObservableBehaviours = observableBehaviours.filter { it in linked }
         )
     }
+
+    private fun Competency.observableBehaviourOf(id: Long?): ObservableBehaviour? =
+        id?.let { observableBehaviours.find { it.id == id } }
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5000L

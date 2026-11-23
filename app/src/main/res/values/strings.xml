@@ -15,6 +15,7 @@
     <!-- CM1 is the glossary's name for the first Crew Member slot, not a typo of "CM!". -->
     <string name="crew_member_1" tools:ignore="Typos">CM1</string>
     <string name="crew_member_2">CM2</string>
+    <string name="crew_member_both">BOTH</string>
     <string name="setup_staff_number_placeholder">Staff Number</string>
     <string name="setup_staff_number_hint">At least one Staff Number, 4 to 6 digits. Either slot may stay empty.</string>
     <string name="setup_route">Route</string>
@@ -32,6 +33,8 @@
     <string name="capture_delete_note">Delete Note</string>
     <string name="capture_note_erased">Note erased</string>
     <string name="capture_done">Done</string>
+    <string name="capture_obs_beh">OBS BEH</string>
+    <string name="capture_obs_beh_none">None</string>
     <string name="undo">Undo</string>
 
     <string name="date_picker_title">Session date</string>

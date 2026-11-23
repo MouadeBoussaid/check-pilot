@@ -1,5 +1,6 @@
 package com.mebiad.checkpilot.domain.note
 
+import com.mebiad.checkpilot.domain.catalogue.CatalogueRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -11,6 +12,7 @@ import java.util.UUID
 
 class EditNotesUsecaseImpl(
     private val repository: NoteRepository,
+    private val catalogue: CatalogueRepository,
     private val newId: () -> String = { UUID.randomUUID().toString() },
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : EditNotesUsecase {
@@ -64,11 +66,33 @@ class EditNotesUsecaseImpl(
         enqueue { repository.updateText(id = id, text = text) }
     }
 
+    override fun setCmTag(
+        id: String,
+        cmTag: CmTag,
+    ) = enqueue { repository.updateCmTag(id = id, cmTag = cmTag) }
+
+    override fun setObservableBehaviour(
+        id: String,
+        observableBehaviourId: Long?,
+    ) = enqueue {
+        if (observableBehaviourId == null || ownsObservableBehaviour(id, observableBehaviourId)) {
+            repository.updateObservableBehaviour(id = id, observableBehaviourId = observableBehaviourId)
+        }
+    }
+
     override fun delete(id: String) = enqueue { repository.delete(id) }
 
     override fun restore(note: Note) = enqueue { repository.insert(note) }
 
     override fun removeEmptyNotes(sessionId: String) = enqueue { repository.deleteEmpty(sessionId) }
+
+    private suspend fun ownsObservableBehaviour(
+        noteId: String,
+        observableBehaviourId: Long,
+    ): Boolean {
+        val competencyId = repository.find(noteId)?.competencyId ?: return false
+        return catalogue.findObservableBehaviour(observableBehaviourId)?.competencyId == competencyId
+    }
 
     private fun enqueue(write: suspend () -> Unit) {
         writes.trySend(write)

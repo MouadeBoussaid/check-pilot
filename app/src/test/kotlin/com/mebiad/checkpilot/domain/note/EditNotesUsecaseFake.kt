@@ -15,6 +15,16 @@ class EditNotesUsecaseFake : EditNotesUsecase {
             val text: String,
         ) : Call
 
+        data class SetCmTag(
+            val id: String,
+            val cmTag: CmTag,
+        ) : Call
+
+        data class SetObservableBehaviour(
+            val id: String,
+            val observableBehaviourId: Long?,
+        ) : Call
+
         data class Delete(
             val id: String,
         ) : Call
@@ -47,6 +57,20 @@ class EditNotesUsecaseFake : EditNotesUsecase {
         text: String,
     ) {
         calls += Call.ChangeText(id = id, text = text)
+    }
+
+    override fun setCmTag(
+        id: String,
+        cmTag: CmTag,
+    ) {
+        calls += Call.SetCmTag(id = id, cmTag = cmTag)
+    }
+
+    override fun setObservableBehaviour(
+        id: String,
+        observableBehaviourId: Long?,
+    ) {
+        calls += Call.SetObservableBehaviour(id = id, observableBehaviourId = observableBehaviourId)
     }
 
     override fun delete(id: String) {

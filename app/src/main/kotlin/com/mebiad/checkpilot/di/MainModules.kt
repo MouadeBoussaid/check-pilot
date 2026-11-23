@@ -79,7 +79,7 @@ val domainModule =
         single<NoteRepository> { NoteRepositoryImpl(dao = get<CheckPilotDatabase>().noteDao()) }
         single<ObserveNotesUsecase> { ObserveNotesUsecaseImpl(repository = get()) }
         // One writer for the whole app keeps every Note write in call order.
-        single<EditNotesUsecase> { EditNotesUsecaseImpl(repository = get()) }
+        single<EditNotesUsecase> { EditNotesUsecaseImpl(repository = get(), catalogue = get()) }
     }
 
 val uiModule =
