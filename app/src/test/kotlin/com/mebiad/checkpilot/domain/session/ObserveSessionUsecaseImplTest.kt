@@ -36,4 +36,35 @@ class ObserveSessionUsecaseImplTest {
                 assertEquals(session, awaitItem())
             }
         }
+
+    @Test
+    fun emitsTheLastSessionAsNewerSessionsAreCreated() =
+        runTest(dispatcher) {
+            // Given
+            val older = session(id = "older", createdAt = Instant.parse("2026-11-01T09:00:00Z"))
+            val newer = session(id = "newer", createdAt = Instant.parse("2026-11-01T10:00:00Z"))
+
+            usecase.lastSession().test {
+                // When / Then: no Session, then an older one, then a newer one
+                assertNull(awaitItem())
+                repository.insert(older)
+                assertEquals(older, awaitItem())
+                repository.insert(newer)
+                assertEquals(newer, awaitItem())
+            }
+        }
+
+    private fun session(
+        id: String,
+        createdAt: Instant,
+    ): Session =
+        Session(
+            id = id,
+            createdAt = createdAt,
+            date = LocalDate.of(2026, 11, 1),
+            cm1StaffNumber = StaffNumber.parse("79125"),
+            cm2StaffNumber = null,
+            departure = checkNotNull(AirportCode.parse("DOH")),
+            destination = checkNotNull(AirportCode.parse("SLL"))
+        )
 }

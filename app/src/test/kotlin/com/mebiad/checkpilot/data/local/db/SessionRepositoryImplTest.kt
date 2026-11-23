@@ -69,4 +69,46 @@ class SessionRepositoryImplTest {
             // Then
             assertNull(session)
         }
+
+    @Test
+    fun theLastSessionIsTheLatestCreatedWithTiesGoingToTheLaterInsert() =
+        runTest {
+            // Given
+            val tieTime = Instant.parse("2026-11-22T10:00:00Z")
+            repository.insert(session(id = "b-first-at-tie", createdAt = tieTime))
+            repository.insert(session(id = "c-older", createdAt = Instant.parse("2026-11-22T08:00:00Z")))
+            repository.insert(session(id = "a-second-at-tie", createdAt = tieTime))
+
+            // When
+            val last = repository.observeLast().first()
+
+            // Then
+            assertEquals("a-second-at-tie", last?.id)
+        }
+
+    @Test
+    fun withoutSessionsThereIsNoLastSession() =
+        runTest {
+            // Given: no Session saved
+
+            // When
+            val last = repository.observeLast().first()
+
+            // Then
+            assertNull(last)
+        }
+
+    private fun session(
+        id: String,
+        createdAt: Instant,
+    ): Session =
+        Session(
+            id = id,
+            createdAt = createdAt,
+            date = LocalDate.of(2026, 11, 22),
+            cm1StaffNumber = StaffNumber.parse("79125"),
+            cm2StaffNumber = null,
+            departure = checkNotNull(AirportCode.parse("DOH")),
+            destination = checkNotNull(AirportCode.parse("SLL"))
+        )
 }

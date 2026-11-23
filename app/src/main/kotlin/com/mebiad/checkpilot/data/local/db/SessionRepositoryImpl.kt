@@ -15,6 +15,8 @@ class SessionRepositoryImpl(
     override suspend fun insert(session: Session) = dao.insert(session.toEntity())
 
     override fun observe(id: String): Flow<Session?> = dao.observe(id).map { it?.toSession() }
+
+    override fun observeLast(): Flow<Session?> = dao.observeLast().map { it?.toSession() }
 }
 
 private fun Session.toEntity(): SessionEntity =
