@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.mebiad.checkpilot.data.local.db.dao.CompetencyDao
+import com.mebiad.checkpilot.data.local.db.dao.NoteDao
 import com.mebiad.checkpilot.data.local.db.dao.SessionDao
 import com.mebiad.checkpilot.data.local.db.entity.CompetencyEntity
 import com.mebiad.checkpilot.data.local.db.entity.GradeEntity
@@ -30,6 +31,8 @@ abstract class CheckPilotDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
 
     abstract fun competencyDao(): CompetencyDao
+
+    abstract fun noteDao(): NoteDao
 
     companion object {
         const val FILE_NAME = "check-pilot.db"
