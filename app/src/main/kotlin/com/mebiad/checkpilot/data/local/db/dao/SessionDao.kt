@@ -13,4 +13,7 @@ interface SessionDao {
 
     @Query("SELECT * FROM session WHERE id = :id")
     fun observe(id: String): Flow<SessionEntity?>
+
+    @Query("SELECT * FROM session ORDER BY createdAt DESC, rowid DESC LIMIT 1")
+    fun observeLast(): Flow<SessionEntity?>
 }

@@ -38,7 +38,16 @@ fun AppNavigation() {
             ),
         entryProvider =
             entryProvider {
-                entry<Home> { HomeScreen(onNewSession = { backStack.add(Setup) }) }
+                entry<Home> {
+                    HomeScreen(
+                        viewModel = koinViewModel(),
+                        onContinueLastSession = { sessionId -> backStack.add(Capture(sessionId)) },
+                        onNewSession = { backStack.add(Setup) },
+                        // The Session list (US-7) and Settings (US-8) come with their own stories.
+                        onOpenSession = {},
+                        onSettings = {}
+                    )
+                }
                 entry<Setup> {
                     SetupScreen(
                         viewModel = koinViewModel(),

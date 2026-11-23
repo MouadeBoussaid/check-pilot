@@ -16,6 +16,12 @@ class SessionRepositoryFake : SessionRepository {
 
     override fun observe(id: String): Flow<Session?> = sessionsState.map { sessions -> sessions.find { it.id == id } }
 
+    override fun observeLast(): Flow<Session?> =
+        sessionsState.map { sessions ->
+            val latest = sessions.maxOfOrNull { it.createdAt }
+            sessions.lastOrNull { it.createdAt == latest }
+        }
+
     fun reset() {
         sessionsState.value = emptyList()
     }

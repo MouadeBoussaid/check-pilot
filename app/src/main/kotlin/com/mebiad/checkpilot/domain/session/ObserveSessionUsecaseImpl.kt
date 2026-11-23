@@ -10,4 +10,6 @@ class ObserveSessionUsecaseImpl(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ObserveSessionUsecase {
     override fun session(id: String): Flow<Session?> = repository.observe(id).flowOn(dispatcher)
+
+    override fun lastSession(): Flow<Session?> = repository.observeLast().flowOn(dispatcher)
 }
