@@ -22,6 +22,14 @@ class GradeRepositoryFake : GradeRepository {
 
     override fun observe(sessionId: String): Flow<List<CompetencyGrade>> = gradesState.map { it.toGrades(sessionId) }
 
+    override fun observeGradedCounts(): Flow<List<GradedCount>> =
+        gradesState.map { grades ->
+            grades.keys
+                .groupingBy { (sessionId, _, crewMember) -> sessionId to crewMember }
+                .eachCount()
+                .map { (key, count) -> GradedCount(sessionId = key.first, crewMember = key.second, count = count) }
+        }
+
     fun reset() {
         gradesState.value = emptyMap()
     }

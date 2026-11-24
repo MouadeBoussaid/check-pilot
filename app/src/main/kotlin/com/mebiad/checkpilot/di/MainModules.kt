@@ -38,8 +38,12 @@ import com.mebiad.checkpilot.domain.pin.PinUsecase
 import com.mebiad.checkpilot.domain.pin.PinUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecase
 import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecaseImpl
+import com.mebiad.checkpilot.domain.session.DeleteSessionUsecase
+import com.mebiad.checkpilot.domain.session.DeleteSessionUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecase
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecaseImpl
+import com.mebiad.checkpilot.domain.session.SearchSessionsUsecase
+import com.mebiad.checkpilot.domain.session.SearchSessionsUsecaseImpl
 import com.mebiad.checkpilot.domain.session.SessionRepository
 import com.mebiad.checkpilot.domain.session.StartSessionUsecase
 import com.mebiad.checkpilot.domain.session.StartSessionUsecaseImpl
@@ -104,6 +108,8 @@ val domainModule =
         single<ObserveDebriefUsecase> {
             ObserveDebriefUsecaseImpl(catalogue = get(), notes = get(), grades = get())
         }
+        single<SearchSessionsUsecase> { SearchSessionsUsecaseImpl(sessions = get(), grades = get(), catalogue = get()) }
+        single<DeleteSessionUsecase> { DeleteSessionUsecaseImpl(repository = get()) }
         single<PinStore> { PinStoreImpl(dataStore = get()) }
         single<PinHasher> { PinHasherImpl() }
         // One instance for the whole app: it holds the Session list's unlock in memory.

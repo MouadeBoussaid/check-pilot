@@ -14,4 +14,7 @@ interface GradeRepository {
 
     /** Emits the Session's Grades, again whenever they change. */
     fun observe(sessionId: String): Flow<List<CompetencyGrade>>
+
+    /** Emits the graded counts of every Session and Crew Member with at least one Grade, again whenever they change. */
+    fun observeGradedCounts(): Flow<List<GradedCount>>
 }
