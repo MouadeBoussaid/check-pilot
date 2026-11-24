@@ -50,6 +50,8 @@ import com.mebiad.checkpilot.domain.session.StartSessionUsecaseImpl
 import com.mebiad.checkpilot.ui.apps.capture.CaptureViewModel
 import com.mebiad.checkpilot.ui.apps.debrief.DebriefViewModel
 import com.mebiad.checkpilot.ui.apps.home.HomeViewModel
+import com.mebiad.checkpilot.ui.apps.pin.PinViewModel
+import com.mebiad.checkpilot.ui.apps.sessions.SessionsViewModel
 import com.mebiad.checkpilot.ui.apps.setup.SetupViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -122,6 +124,8 @@ val uiModule =
         viewModelOf(::SetupViewModel)
         viewModelOf(::CaptureViewModel)
         viewModelOf(::DebriefViewModel)
+        viewModelOf(::PinViewModel)
+        viewModelOf(::SessionsViewModel)
     }
 
 val mainModules = listOf(coreModule, dataModule, domainModule, uiModule)
