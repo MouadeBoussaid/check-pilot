@@ -82,7 +82,10 @@
     <string name="pin_again_subtitle">Type the new PIN again</string>
     <string name="pin_step_new">New PIN</string>
     <string name="pin_step_confirm">Confirm</string>
-    <string name="pin_digit_count">%1$d digits typed</string>
+    <plurals name="pin_digit_count">
+        <item quantity="one">%1$d digit typed</item>
+        <item quantity="other">%1$d digits typed</item>
+    </plurals>
     <string name="pin_hint_4_to_6_digits">A PIN has 4 to 6 digits.</string>
     <string name="pin_mismatch">The PINs don\'t match.</string>
     <string name="pin_wrong">The PIN is wrong.</string>

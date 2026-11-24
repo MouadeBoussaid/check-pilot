@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -183,7 +184,7 @@ private fun PinDots(
     digitCount: Int,
     isError: Boolean,
 ) {
-    val description = stringResource(R.string.pin_digit_count, digitCount)
+    val description = pluralStringResource(R.plurals.pin_digit_count, digitCount, digitCount)
     val filled = MaterialTheme.colorScheme.primary
     val empty = if (isError) MaterialTheme.colorScheme.error else CheckPilotTheme.colors.hint
     Row(
