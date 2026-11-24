@@ -15,4 +15,14 @@ data class Session(
 ) {
     val hasTwoCrewMembers: Boolean
         get() = cm1StaffNumber != null && cm2StaffNumber != null
+
+    /** The slots that hold a Staff Number, CM1 first. */
+    val crewMembers: List<CrewMember>
+        get() = CrewMember.entries.filter { staffNumberOf(it) != null }
+
+    fun staffNumberOf(crewMember: CrewMember): StaffNumber? =
+        when (crewMember) {
+            CrewMember.CM1 -> cm1StaffNumber
+            CrewMember.CM2 -> cm2StaffNumber
+        }
 }

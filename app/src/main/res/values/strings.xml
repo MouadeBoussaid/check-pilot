@@ -36,6 +36,39 @@
     <string name="capture_obs_beh">OBS BEH</string>
     <string name="capture_obs_beh_none">None</string>
     <string name="undo">Undo</string>
+    <string name="close">Close</string>
+    <string name="capture_generate_debrief">Generate Debrief</string>
+    <string name="capture_which_crew_member">Which Crew Member?</string>
+    <string name="capture_crew_member_debrief">%1$s Debrief</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="debrief_title">Debrief</string>
+    <string name="debrief_change_date">Change the date</string>
+    <plurals name="debrief_grades_set">
+        <item quantity="one">%1$d of %2$d Grade set</item>
+        <item quantity="other">%1$d of %2$d Grades set</item>
+    </plurals>
+    <string name="debrief_obs_beh_count">%1$d OBS BEH</string>
+    <string name="debrief_show_notes">Show Notes</string>
+    <string name="debrief_select_grade">Select Grade</string>
+    <string name="debrief_no_obs_beh">No OBS BEH</string>
+    <string name="debrief_stay">Stay</string>
+    <string name="debrief_leave">Leave</string>
+    <plurals name="debrief_note_count">
+        <item quantity="one">%1$d Note</item>
+        <item quantity="other">%1$d Notes</item>
+    </plurals>
+    <plurals name="debrief_competencies_without_grade">
+        <item quantity="one">%1$d Competency has no Grade</item>
+        <item quantity="other">%1$d Competencies have no Grade</item>
+    </plurals>
+
+    <string name="grade_not_observed">Not Observed</string>
+    <string name="grade_exemplary">Exemplary</string>
+    <string name="grade_effective">Effective</string>
+    <string name="grade_adequate">Adequate</string>
+    <string name="grade_minimum_acceptable_level">Minimum Acceptable Level</string>
+    <string name="grade_not_yet_competent">Not Yet Competent</string>
 
     <string name="date_picker_title">Session date</string>
     <string name="date_picker_ok">OK</string>

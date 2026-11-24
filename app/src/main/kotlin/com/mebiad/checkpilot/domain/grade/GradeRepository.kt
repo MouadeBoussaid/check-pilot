@@ -1,0 +1,17 @@
+package com.mebiad.checkpilot.domain.grade
+
+import com.mebiad.checkpilot.domain.session.CrewMember
+import kotlinx.coroutines.flow.Flow
+
+interface GradeRepository {
+    /** Sets the Grade, replacing the one the Crew Member had for the Competency. */
+    suspend fun set(
+        sessionId: String,
+        competencyId: Long,
+        crewMember: CrewMember,
+        grade: Grade,
+    )
+
+    /** Emits the Session's Grades, again whenever they change. */
+    fun observe(sessionId: String): Flow<List<CompetencyGrade>>
+}

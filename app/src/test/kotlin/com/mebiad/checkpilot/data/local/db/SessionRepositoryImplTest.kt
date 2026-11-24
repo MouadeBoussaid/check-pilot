@@ -59,6 +59,20 @@ class SessionRepositoryImplTest {
         }
 
     @Test
+    fun aChangedDateIsObservedAndTheRestOfTheSessionIsKept() =
+        runTest {
+            // Given
+            val session = session(id = "session-1", createdAt = Instant.parse("2026-11-22T09:30:00Z"))
+            repository.insert(session)
+
+            // When
+            repository.updateDate(id = "session-1", date = LocalDate.of(2026, 11, 5))
+
+            // Then
+            assertEquals(session.copy(date = LocalDate.of(2026, 11, 5)), repository.observe("session-1").first())
+        }
+
+    @Test
     fun anUnknownSessionIsObservedAsNull() =
         runTest {
             // Given: no Session saved
