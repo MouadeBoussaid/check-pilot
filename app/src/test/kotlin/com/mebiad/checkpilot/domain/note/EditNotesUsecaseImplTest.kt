@@ -182,6 +182,50 @@ class EditNotesUsecaseImplTest {
             assertEquals(listOf("Late flaps"), repository.notes.map { it.text })
         }
 
+    @Test
+    fun moveFilesTheNoteAfterTheOtherCompetencysLastNoteWithItsTextAndCmTagButNoObsBeh() =
+        runTest(dispatcher) {
+            // Given
+            repository.insert(note(id = "moved", competencyId = 1, sortIndex = 2, text = "Readback incomplete"))
+            repository.insert(note(id = "staying", competencyId = 1, sortIndex = 3))
+            repository.insert(note(id = "target", competencyId = 3, sortIndex = 6))
+
+            // When
+            usecase.move(id = "moved", competencyId = 3)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(
+                Note(
+                    id = "moved",
+                    sessionId = SESSION_ID,
+                    competencyId = 3,
+                    text = "Readback incomplete",
+                    cmTag = CmTag.CM2,
+                    observableBehaviourId = null,
+                    sortIndex = 7
+                ),
+                repository.notes.single { it.id == "moved" }
+            )
+            assertEquals(1L, repository.notes.single { it.id == "staying" }.competencyId)
+        }
+
+    @Test
+    fun moveCalledWhileTheNoteIsStillBeingAddedLandsAfterIt() =
+        runTest(dispatcher) {
+            // Given
+            repository.insertDelayMs = 100
+            val id = usecase.add(sessionId = SESSION_ID, competencyId = 1, text = "Late flaps")
+
+            // When
+            usecase.move(id = id, competencyId = 3)
+            advanceUntilIdle()
+
+            // Then
+            val moved = repository.notes.single { it.id == id }
+            assertEquals(3L to 0L, moved.competencyId to moved.sortIndex)
+        }
+
     private fun note(
         id: String,
         competencyId: Long,

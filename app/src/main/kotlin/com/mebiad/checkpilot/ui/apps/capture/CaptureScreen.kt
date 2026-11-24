@@ -23,21 +23,25 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,6 +91,7 @@ import com.mebiad.checkpilot.ui.generic.components.slot
 import com.mebiad.checkpilot.ui.generic.format.toDisplayText
 import com.mebiad.checkpilot.ui.generic.theme.CheckPilotTheme
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Composable
 fun CaptureScreen(
@@ -97,15 +102,17 @@ fun CaptureScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val noteErased = stringResource(R.string.capture_note_erased)
+    val noteMoved = stringResource(R.string.capture_note_moved)
     val undo = stringResource(R.string.undo)
     LaunchedEffect(viewModel) {
-        // collectLatest: a newer erase replaces the snackbar showing, which makes the older erase final.
+        // collectLatest: a newer change replaces the snackbar showing, which makes the older change final.
         viewModel.events.collectLatest { event ->
-            when (event) {
-                is CaptureEvent.NoteErased -> {
-                    if (snackbarHostState.showUndo(message = noteErased, undoLabel = undo)) viewModel.undo(event.token)
+            val message =
+                when (event) {
+                    is CaptureEvent.NoteErased -> noteErased
+                    is CaptureEvent.NoteMoved -> noteMoved
                 }
-            }
+            if (snackbarHostState.showUndo(message = message, undoLabel = undo)) viewModel.undo(event.token)
         }
     }
     CaptureContent(
@@ -116,6 +123,7 @@ fun CaptureScreen(
         onDeleteField = viewModel::onDeleteField,
         onCmTagSelect = viewModel::onCmTagSelect,
         onObservableBehaviourSelect = viewModel::onObservableBehaviourSelect,
+        onMoveField = viewModel::onMoveField,
         onGenerateDebrief = onGenerateDebrief,
         onDone = onDone
     )
@@ -130,10 +138,12 @@ private fun CaptureContent(
     onDeleteField: (key: String) -> Unit,
     onCmTagSelect: (key: String, cmTag: CmTag) -> Unit,
     onObservableBehaviourSelect: (key: String, observableBehaviourId: Long?) -> Unit,
+    onMoveField: (key: String, competencyId: Long) -> Unit,
     onGenerateDebrief: (CrewMember) -> Unit,
     onDone: () -> Unit,
 ) {
     var pickingCrewMember by remember { mutableStateOf(false) }
+    var movingKey by remember { mutableStateOf<String?>(null) }
     val focusManager = LocalFocusManager.current
     Scaffold(snackbarHost = { UndoSnackbarHost(hostState = snackbarHostState) }) { innerPadding ->
         val session = state.session ?: return@Scaffold
@@ -167,7 +177,8 @@ private fun CaptureContent(
                                 onFocusLost = { onFieldFocusLost(field.key) },
                                 onDelete = { onDeleteField(field.key) },
                                 onCmTagSelect = { cmTag -> onCmTagSelect(field.key, cmTag) },
-                                onObservableBehaviourSelect = { id -> onObservableBehaviourSelect(field.key, id) }
+                                onObservableBehaviourSelect = { id -> onObservableBehaviourSelect(field.key, id) },
+                                onMove = { movingKey = field.key }
                             )
                         }
                     }
@@ -199,6 +210,157 @@ private fun CaptureContent(
                     onGenerateDebrief(crewMember)
                 },
                 onDismiss = { pickingCrewMember = false }
+            )
+        }
+        movingKey?.let { key ->
+            val moving =
+                state.competencies.firstNotNullOfOrNull { competencyNotes ->
+                    competencyNotes.fields
+                        .find { it.key == key && it.isNote }
+                        ?.let { field -> field to competencyNotes.competency }
+                }
+            if (moving == null) {
+                LaunchedEffect(key) { movingKey = null }
+            } else {
+                MoveNoteSheet(
+                    field = moving.first,
+                    from = moving.second,
+                    competencies = state.competencies.map { it.competency },
+                    onPick = { competency ->
+                        movingKey = null
+                        onMoveField(key, competency.id)
+                    },
+                    onClose = { movingKey = null }
+                )
+            }
+        }
+    }
+}
+
+/** Asks which Competency to move a Note to, listing every Competency with the Note's own one marked. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MoveNoteSheet(
+    field: NoteField,
+    from: Competency,
+    competencies: List<Competency>,
+    onPick: (Competency) -> Unit,
+    onClose: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    ModalBottomSheet(
+        onDismissRequest = onClose,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+        ) {
+            Row(modifier = Modifier.padding(start = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.capture_move_note_to),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = { scope.launch { sheetState.hide() }.invokeOnCompletion { onClose() } }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_close),
+                        contentDescription = stringResource(R.string.close)
+                    )
+                }
+            }
+            MovingNoteCard(field = field, modifier = Modifier.padding(top = 16.dp, bottom = 16.dp))
+            competencies.forEachIndexed { index, competency ->
+                MoveTarget(
+                    number = index + 1,
+                    competency = competency,
+                    isCurrent = competency.id == from.id,
+                    onClick = { onPick(competency) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MovingNoteCard(
+    field: NoteField,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium)
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.capture_move_note_quote, field.text),
+            style = MaterialTheme.typography.bodyLarge
+        )
+        field.observableBehaviour?.let { observableBehaviour ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_info),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = stringResource(R.string.capture_move_note_link_removed, observableBehaviour.name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+/** A Competency in the Move Note sheet: tapping it moves the Note there, except the one the Note is in now. */
+@Composable
+private fun MoveTarget(
+    number: Int,
+    competency: Competency,
+    isCurrent: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = MaterialTheme.shapes.medium
+    val modifier =
+        if (isCurrent) {
+            Modifier.background(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = shape)
+        } else {
+            Modifier.clip(shape).clickable(onClick = onClick)
+        }
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .then(modifier)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CompetencyNumber(number = number)
+        Text(
+            text = competency.name,
+            style = MaterialTheme.typography.titleMedium,
+            color = if (isCurrent) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        if (isCurrent) {
+            Text(
+                text = stringResource(R.string.capture_move_note_now_here),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -319,7 +481,7 @@ private fun StaffNumberChips(session: Session) {
  * keeps its own text while the Assessor types, so it never waits for the ViewModel or the database.
  *
  * While the Note is active it shows its editing controls: the CM Tag selector in a Session with two Crew Members, and
- * the OBS BEH dropdown once the Note has text. Otherwise it shows its OBS BEH in small italic under the text.
+ * the OBS BEH dropdown and the move button once the Note has text. Otherwise it shows its OBS BEH in small italic under the text.
  */
 @Composable
 private fun NoteFieldCard(
@@ -332,6 +494,7 @@ private fun NoteFieldCard(
     onDelete: () -> Unit,
     onCmTagSelect: (CmTag) -> Unit,
     onObservableBehaviourSelect: (Long?) -> Unit,
+    onMove: () -> Unit,
 ) {
     var value by remember { mutableStateOf(TextFieldValue(field.text, TextRange(field.text.length))) }
     var focused by remember { mutableStateOf(false) }
@@ -423,19 +586,44 @@ private fun NoteFieldCard(
                 )
             }
             if (value.text.isNotEmpty()) {
-                ObservableBehaviourDropdown(
-                    selected = field.observableBehaviour,
-                    choices = observableBehaviours,
-                    expanded = menuOpen,
-                    onExpandedChange = { open ->
-                        menuOpen = open
-                        if (!open) focusRequester.requestFocus()
-                    },
-                    onSelect = onObservableBehaviourSelect,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                )
+                Row(
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ObservableBehaviourDropdown(
+                        selected = field.observableBehaviour,
+                        choices = observableBehaviours,
+                        expanded = menuOpen,
+                        onExpandedChange = { open ->
+                            menuOpen = open
+                            if (!open) focusRequester.requestFocus()
+                        },
+                        onSelect = onObservableBehaviourSelect,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MoveNoteButton(onClick = onMove)
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun MoveNoteButton(onClick: () -> Unit) {
+    val shape = MaterialTheme.shapes.medium
+    IconButton(
+        onClick = onClick,
+        modifier =
+            Modifier
+                .size(48.dp)
+                .border(width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = shape)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_swap_vert),
+            contentDescription = stringResource(R.string.capture_move_note),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -628,22 +816,7 @@ private fun CompetencyHeader(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(28.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceContainer,
-                            shape = MaterialTheme.shapes.small
-                        ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = number.toString(),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            CompetencyNumber(number = number)
             Text(text = competency.name, style = MaterialTheme.typography.titleLarge)
         }
         if (linkedObservableBehaviours.isNotEmpty()) {
@@ -652,5 +825,22 @@ private fun CompetencyHeader(
                 modifier = Modifier.padding(start = 40.dp, top = 2.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun CompetencyNumber(number: Int) {
+    Box(
+        modifier =
+            Modifier
+                .size(28.dp)
+                .background(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.small),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = number.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

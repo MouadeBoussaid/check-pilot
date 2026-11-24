@@ -47,9 +47,17 @@ data class NoteField(
 )
 
 sealed interface CaptureEvent {
-    /** A Note was erased; [token] answers its undo snackbar. */
+    /** [token] answers the undo snackbar of the change. */
+    val token: Long
+
+    /** A Note was erased. */
     data class NoteErased(
-        val token: Long,
+        override val token: Long,
+    ) : CaptureEvent
+
+    /** A Note was moved to another Competency. */
+    data class NoteMoved(
+        override val token: Long,
     ) : CaptureEvent
 }
 
@@ -60,6 +68,7 @@ sealed interface CaptureEvent {
  * gives each Competency's empty field a fresh key after it became a Note. [hidden] holds the ids of erased Notes,
  * [restored] the copies Undo wrote back, by id, and [textsBeforeEmptied] what each Note said before it was emptied.
  * [cmTags] and [observableBehaviours] hold the latest selected CM Tag and OBS BEH id of each Note, null for none.
+ * [movedTo] holds the Competency id each moved Note was last moved to.
  */
 private data class Overlay(
     val added: Map<String, Long> = emptyMap(),
@@ -71,7 +80,26 @@ private data class Overlay(
     val textsBeforeEmptied: Map<String, String> = emptyMap(),
     val cmTags: Map<String, CmTag> = emptyMap(),
     val observableBehaviours: Map<String, Long?> = emptyMap(),
+    val movedTo: Map<String, Long> = emptyMap(),
 ) {
+    /**
+     * Where [note] shows: under the Competency it was last moved to, after that Competency's Notes until the database
+     * has the move, or in the place Undo wrote it back to.
+     */
+    fun placed(note: Note): Note {
+        val target = movedTo[note.id]
+        if (target != null) {
+            return note.copy(
+                competencyId = target,
+                sortIndex = if (note.competencyId == target) note.sortIndex else Long.MAX_VALUE
+            )
+        }
+        val copy = restored[note.id] ?: return note
+        return note.copy(competencyId = copy.competencyId, sortIndex = copy.sortIndex)
+    }
+
+    fun competencyIdOfAdded(noteId: String): Long? = movedTo[noteId] ?: added[noteId]
+
     fun observableBehaviourIdOf(
         noteId: String,
         saved: Long?,
@@ -194,7 +222,28 @@ class CaptureViewModel(
         erase(id, undoText = text.ifEmpty { current.textsBeforeEmptied[id] })
     }
 
-    /** Writes back the Note erased with [token], if no newer erase came after it. */
+    /** Moves the Note in [key] to the end of the Competency [competencyId]'s Notes. */
+    fun onMoveField(
+        key: String,
+        competencyId: Long,
+    ) {
+        val current = overlay.value
+        val id = current.noteIdOf(key)
+        val text = textOf(id) ?: return
+        val from = savedNoteOf(id)?.let { current.placed(it).competencyId } ?: current.competencyIdOfAdded(id)
+        if (from == competencyId) return
+        val copy = undoCopyOf(id, text)
+        editNotes.move(id = id, competencyId = competencyId)
+        overlay.value =
+            current.copy(
+                movedTo = current.movedTo + (id to competencyId),
+                restored = current.restored - id,
+                observableBehaviours = current.observableBehaviours + (id to null)
+            )
+        if (copy != null) offerUndo(copy, CaptureEvent::NoteMoved)
+    }
+
+    /** Writes back the Note erased or moved with [token], if no newer change came after it. */
     fun undo(token: Long) {
         val (current, copy) = undoable ?: return
         if (current != token) return
@@ -204,7 +253,10 @@ class CaptureViewModel(
             overlay.value.let {
                 it.copy(
                     hidden = it.hidden - copy.id,
+                    movedTo = it.movedTo - copy.id,
                     restored = it.restored + (copy.id to copy),
+                    cmTags = it.cmTags + (copy.id to copy.cmTag),
+                    observableBehaviours = it.observableBehaviours + (copy.id to copy.observableBehaviourId),
                     texts = it.texts + (copy.id to copy.text),
                     textsBeforeEmptied = it.textsBeforeEmptied - copy.id
                 )
@@ -227,23 +279,35 @@ class CaptureViewModel(
         id: String,
         undoText: String?,
     ) {
-        val current = overlay.value
-        val copy =
-            savedNoteOf(id)?.let { row ->
-                undoText?.takeIf { it.isNotEmpty() }?.let {
-                    row.copy(
-                        text = it,
-                        cmTag = current.cmTags[id] ?: row.cmTag,
-                        observableBehaviourId = current.observableBehaviourIdOf(id, row.observableBehaviourId)
-                    )
-                }
-            }
+        val copy = undoCopyOf(id, undoText)
         editNotes.delete(id)
         overlay.value = overlay.value.let { it.copy(hidden = it.hidden + id) }
-        if (copy == null) return
+        if (copy != null) offerUndo(copy, CaptureEvent::NoteErased)
+    }
+
+    /** The Note as it shows, with [text], for Undo to write back; null while it has no row to copy. */
+    private fun undoCopyOf(
+        id: String,
+        text: String?,
+    ): Note? {
+        val current = overlay.value
+        val row = savedNoteOf(id) ?: return null
+        if (text.isNullOrEmpty()) return null
+        return current.placed(row).copy(
+            text = text,
+            cmTag = current.cmTags[id] ?: row.cmTag,
+            observableBehaviourId = current.observableBehaviourIdOf(id, row.observableBehaviourId)
+        )
+    }
+
+    /** Keeps [copy] for the undo snackbar of a new change, which makes any older change final. */
+    private fun offerUndo(
+        copy: Note,
+        event: (token: Long) -> CaptureEvent,
+    ) {
         val token = ++lastToken
         undoable = token to copy
-        mutableEvents.tryEmit(CaptureEvent.NoteErased(token))
+        mutableEvents.tryEmit(event(token))
     }
 
     private fun Competency.withFields(
@@ -254,14 +318,15 @@ class CaptureViewModel(
         val restored = overlay.restored.values.filter { it.id !in savedIds }
         val saved =
             (notes + restored)
+                .map { overlay.placed(it) }
                 .filter { it.competencyId == id && it.id !in overlay.hidden }
                 .sortedBy { it.sortIndex }
         val unsaved =
             overlay.added
-                .filter { (noteId, competencyId) ->
-                    competencyId == id && noteId !in savedIds &&
-                        noteId !in overlay.hidden
-                }.keys
+                .keys
+                .filter { noteId ->
+                    overlay.competencyIdOfAdded(noteId) == id && noteId !in savedIds && noteId !in overlay.hidden
+                }
         val noteFields =
             saved.map { note ->
                 NoteField(

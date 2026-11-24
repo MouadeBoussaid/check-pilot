@@ -28,6 +28,15 @@ interface EditNotesUsecase {
         observableBehaviourId: Long?,
     )
 
+    /**
+     * Files the Note under [competencyId], after that Competency's last Note, and unlinks its OBS BEH, which belongs to
+     * the Competency it leaves.
+     */
+    fun move(
+        id: String,
+        competencyId: Long,
+    )
+
     fun delete(id: String)
 
     /** Writes back a Note as it was, with its id, CM Tag, OBS BEH, Competency and place, as Undo does. */

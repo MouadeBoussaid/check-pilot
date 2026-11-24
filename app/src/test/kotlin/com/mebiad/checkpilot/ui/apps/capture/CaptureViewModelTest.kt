@@ -494,6 +494,87 @@ class CaptureViewModelTest {
             assertEquals(emptyList<CaptureEvent>(), events)
         }
 
+    @Test
+    fun movingANoteSavesTheMoveAndShowsItLastInTheOtherCompetencyWithoutObsBehBeforeTheDatabaseHasIt() =
+        runTest {
+            // Given
+            observeSession.sessions.value = listOf(session)
+            observeCatalogue.competencies.value = listOf(competency3, Competency(id = 5, name = "Leadership"))
+            observeNotes.notes.value =
+                listOf(
+                    note(
+                        id = "a",
+                        sortIndex = 0,
+                        competencyId = 3,
+                        text = "Readback",
+                        observableBehaviourId = OBS_3C.id
+                    ),
+                    note(id = "b", sortIndex = 1, competencyId = 3, text = "Late flaps"),
+                    note(id = "c", sortIndex = 4, competencyId = 5, text = "Briefed")
+                )
+            val viewModel = subscribedViewModel()
+            val events = eventsOf(viewModel)
+
+            // When
+            viewModel.onMoveField(key = "a", competencyId = 5)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(EditNotesUsecaseFake.Call.Move(id = "a", competencyId = 5), editNotes.calls.last())
+            val state = viewModel.state.value
+            assertEquals(listOf("Late flaps", ""), state.textsOf(3))
+            assertEquals(listOf("Briefed", "Readback", ""), state.textsOf(5))
+            val moved = state.fieldsOf(5)[1]
+            assertEquals(CmTag.CM2 to null, moved.cmTag to moved.observableBehaviour)
+            assertEquals(emptyList<ObservableBehaviour>(), state.competencyOf(3).linkedObservableBehaviours)
+            assertEquals(1, events.filterIsInstance<CaptureEvent.NoteMoved>().size)
+        }
+
+    @Test
+    fun undoAfterAMoveRestoresTheNoteInItsOldPlaceWithItsObsBehBeforeTheDatabaseHasIt() =
+        runTest {
+            // Given
+            observeSession.sessions.value = listOf(session)
+            observeCatalogue.competencies.value = listOf(competency3, Competency(id = 5, name = "Leadership"))
+            val moved =
+                note(id = "b", sortIndex = 1, competencyId = 3, text = "Readback", observableBehaviourId = OBS_3C.id)
+            val before =
+                listOf(
+                    note(id = "a", sortIndex = 0, competencyId = 3, text = "Late flaps"),
+                    moved,
+                    note(id = "c", sortIndex = 2, competencyId = 3, text = "Late gear")
+                )
+            observeNotes.notes.value = before
+            val viewModel = subscribedViewModel()
+            val events = eventsOf(viewModel)
+            viewModel.onMoveField(key = "b", competencyId = 5)
+            advanceUntilIdle()
+            observeNotes.notes.value =
+                before.map {
+                    if (it.id ==
+                        "b"
+                    ) {
+                        it.copy(competencyId = 5, observableBehaviourId = null, sortIndex = 0)
+                    } else {
+                        it
+                    }
+                }
+            advanceUntilIdle()
+            val event = events.filterIsInstance<CaptureEvent.NoteMoved>().single()
+
+            // When
+            viewModel.undo(event.token)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(EditNotesUsecaseFake.Call.Restore(moved), editNotes.calls.last())
+            val state = viewModel.state.value
+            assertEquals(listOf("Late flaps", "Readback", "Late gear", ""), state.textsOf(3))
+            assertEquals(listOf(""), state.textsOf(5))
+            assertEquals(OBS_3C, state.fieldsOf(3)[1].observableBehaviour)
+            assertEquals(listOf(OBS_3C), state.competencyOf(3).linkedObservableBehaviours)
+        }
+
     private fun TestScope.subscribedViewModel(): CaptureViewModel {
         val viewModel =
             CaptureViewModel(

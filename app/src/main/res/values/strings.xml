@@ -32,6 +32,12 @@
     <string name="capture_add_note">Add Note</string>
     <string name="capture_delete_note">Delete Note</string>
     <string name="capture_note_erased">Note erased</string>
+    <string name="capture_note_moved">Note moved</string>
+    <string name="capture_move_note">Move Note</string>
+    <string name="capture_move_note_to">Move Note to</string>
+    <string name="capture_move_note_quote">“%1$s”</string>
+    <string name="capture_move_note_link_removed">It\'s linked to OBS BEH %1$s. The link is removed when it moves.</string>
+    <string name="capture_move_note_now_here">Now here</string>
     <string name="capture_done">Done</string>
     <string name="capture_obs_beh">OBS BEH</string>
     <string name="capture_obs_beh_none">None</string>
