@@ -15,6 +15,7 @@ import com.mebiad.checkpilot.data.local.db.CheckPilotDatabase
 import com.mebiad.checkpilot.data.local.db.GradeRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.NoteRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.SessionRepositoryImpl
+import com.mebiad.checkpilot.data.local.settings.PinStoreImpl
 import com.mebiad.checkpilot.domain.catalogue.CatalogueRepository
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecase
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecaseImpl
@@ -30,6 +31,11 @@ import com.mebiad.checkpilot.domain.note.EditNotesUsecaseImpl
 import com.mebiad.checkpilot.domain.note.NoteRepository
 import com.mebiad.checkpilot.domain.note.ObserveNotesUsecase
 import com.mebiad.checkpilot.domain.note.ObserveNotesUsecaseImpl
+import com.mebiad.checkpilot.domain.pin.PinHasher
+import com.mebiad.checkpilot.domain.pin.PinHasherImpl
+import com.mebiad.checkpilot.domain.pin.PinStore
+import com.mebiad.checkpilot.domain.pin.PinUsecase
+import com.mebiad.checkpilot.domain.pin.PinUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecase
 import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecase
@@ -98,6 +104,10 @@ val domainModule =
         single<ObserveDebriefUsecase> {
             ObserveDebriefUsecaseImpl(catalogue = get(), notes = get(), grades = get())
         }
+        single<PinStore> { PinStoreImpl(dataStore = get()) }
+        single<PinHasher> { PinHasherImpl() }
+        // One instance for the whole app: it holds the Session list's unlock in memory.
+        single<PinUsecase> { PinUsecaseImpl(store = get(), hasher = get()) }
     }
 
 val uiModule =
