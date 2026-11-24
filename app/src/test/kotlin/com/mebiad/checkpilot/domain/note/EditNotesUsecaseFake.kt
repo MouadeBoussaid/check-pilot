@@ -25,6 +25,11 @@ class EditNotesUsecaseFake : EditNotesUsecase {
             val observableBehaviourId: Long?,
         ) : Call
 
+        data class Move(
+            val id: String,
+            val competencyId: Long,
+        ) : Call
+
         data class Delete(
             val id: String,
         ) : Call
@@ -71,6 +76,13 @@ class EditNotesUsecaseFake : EditNotesUsecase {
         observableBehaviourId: Long?,
     ) {
         calls += Call.SetObservableBehaviour(id = id, observableBehaviourId = observableBehaviourId)
+    }
+
+    override fun move(
+        id: String,
+        competencyId: Long,
+    ) {
+        calls += Call.Move(id = id, competencyId = competencyId)
     }
 
     override fun delete(id: String) {

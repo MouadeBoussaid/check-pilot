@@ -80,6 +80,19 @@ class EditNotesUsecaseImpl(
         }
     }
 
+    override fun move(
+        id: String,
+        competencyId: Long,
+    ) = enqueue {
+        val note = repository.find(id) ?: return@enqueue
+        if (note.competencyId == competencyId) return@enqueue
+        val sortIndex = (repository.highestSortIndex(note.sessionId, competencyId) ?: -1) + 1
+        // One replace, so the Note is never half moved.
+        repository.insert(
+            note.copy(competencyId = competencyId, observableBehaviourId = null, sortIndex = sortIndex)
+        )
+    }
+
     override fun delete(id: String) = enqueue { repository.delete(id) }
 
     override fun restore(note: Note) = enqueue { repository.insert(note) }

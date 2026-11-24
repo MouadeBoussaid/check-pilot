@@ -97,15 +97,17 @@ fun CaptureScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val noteErased = stringResource(R.string.capture_note_erased)
+    val noteMoved = stringResource(R.string.capture_note_moved)
     val undo = stringResource(R.string.undo)
     LaunchedEffect(viewModel) {
-        // collectLatest: a newer erase replaces the snackbar showing, which makes the older erase final.
+        // collectLatest: a newer change replaces the snackbar showing, which makes the older change final.
         viewModel.events.collectLatest { event ->
-            when (event) {
-                is CaptureEvent.NoteErased -> {
-                    if (snackbarHostState.showUndo(message = noteErased, undoLabel = undo)) viewModel.undo(event.token)
+            val message =
+                when (event) {
+                    is CaptureEvent.NoteErased -> noteErased
+                    is CaptureEvent.NoteMoved -> noteMoved
                 }
-            }
+            if (snackbarHostState.showUndo(message = message, undoLabel = undo)) viewModel.undo(event.token)
         }
     }
     CaptureContent(
