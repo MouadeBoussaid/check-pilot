@@ -21,6 +21,7 @@ import com.mebiad.checkpilot.ui.apps.home.HomeScreen
 import com.mebiad.checkpilot.ui.apps.pin.PinMode
 import com.mebiad.checkpilot.ui.apps.pin.PinScreen
 import com.mebiad.checkpilot.ui.apps.sessions.SessionsScreen
+import com.mebiad.checkpilot.ui.apps.settings.SettingsScreen
 import com.mebiad.checkpilot.ui.apps.setup.SetupScreen
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
@@ -46,6 +47,12 @@ data class Debrief(
 
 @Serializable
 data object Sessions : NavKey
+
+@Serializable
+data object Settings : NavKey
+
+@Serializable
+data object ChangePin : NavKey
 
 /**
  * [onLockSessionList] runs whenever the Session list leaves the back stack and whenever the app goes to the background,
@@ -73,8 +80,20 @@ fun AppNavigation(onLockSessionList: () -> Unit) {
                         onContinueLastSession = { sessionId -> backStack.add(Capture(sessionId)) },
                         onNewSession = { backStack.add(Setup) },
                         onOpenSession = { backStack.add(Sessions) },
-                        // Settings (US-8) comes with its own story.
-                        onSettings = {}
+                        onSettings = { backStack.add(Settings) }
+                    )
+                }
+                entry<Settings> {
+                    SettingsScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                        onChangePin = { backStack.add(ChangePin) }
+                    )
+                }
+                entry<ChangePin> {
+                    PinScreen(
+                        viewModel = koinViewModel { parametersOf(PinMode.Change) },
+                        onBack = { backStack.removeLastOrNull() },
+                        onPinChanged = { backStack.removeLastOrNull() }
                     )
                 }
                 entry<Setup> {
