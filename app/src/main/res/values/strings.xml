@@ -78,6 +78,7 @@
 
     <string name="pin_set_title">Set a PIN</string>
     <string name="pin_enter_title">Enter PIN</string>
+    <string name="pin_current_subtitle">Type your current PIN</string>
     <string name="pin_new_subtitle">Type a new PIN for your saved Sessions</string>
     <string name="pin_again_subtitle">Type the new PIN again</string>
     <string name="pin_step_new">New PIN</string>

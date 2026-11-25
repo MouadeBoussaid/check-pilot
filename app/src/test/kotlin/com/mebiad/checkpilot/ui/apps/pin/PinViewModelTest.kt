@@ -1,5 +1,6 @@
 package com.mebiad.checkpilot.ui.apps.pin
 
+import app.cash.turbine.test
 import com.mebiad.checkpilot.domain.pin.PinUsecaseFake
 import com.mebiad.checkpilot.testutils.MainDispatcherRule
 import kotlinx.coroutines.CompletableDeferred
@@ -227,9 +228,69 @@ class PinViewModelTest {
             assertEquals(listOf("1235"), pin.checks)
         }
 
+    @Test
+    fun changingAPinAsksForTheCurrentOneFirst() =
+        runTest {
+            // Given
+            pin.pin = "1234"
+
+            // When
+            val viewModel = shownViewModel(mode = PinMode.Change)
+
+            // Then
+            assertEquals(PinUiState(mode = PinMode.Change, step = PinStep.Current), viewModel.state.value)
+        }
+
+    @Test
+    fun aWrongCurrentPinSaysSoAndTheRightOneAsksForTheNewPin() =
+        runTest {
+            // Given
+            pin.pin = "1234"
+            val viewModel = shownViewModel(mode = PinMode.Change)
+
+            // When / Then: a wrong current PIN
+            viewModel.type("1235")
+            advanceUntilIdle()
+            assertEquals(
+                PinUiState(mode = PinMode.Change, step = PinStep.Current, message = PinMessage.Wrong),
+                viewModel.state.value
+            )
+
+            // When / Then: the right current PIN
+            viewModel.type("1234")
+            advanceUntilIdle()
+            assertEquals(PinUiState(mode = PinMode.Change, step = PinStep.NewPin), viewModel.state.value)
+            assertEquals(listOf("1235", "1234"), pin.verifications)
+            assertEquals(false, pin.unlocked.value)
+        }
+
+    @Test
+    fun theNewPinTypedTwiceChangesThePinAndEndsTheChange() =
+        runTest {
+            // Given
+            pin.pin = "1234"
+            val viewModel = shownViewModel(mode = PinMode.Change)
+            viewModel.type("1234")
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                // When
+                viewModel.type("975724")
+                advanceUntilIdle()
+                assertEquals(PinStep.Again, viewModel.state.value.step)
+                viewModel.type("975724")
+                advanceUntilIdle()
+
+                // Then
+                assertEquals(PinEvent.Changed, awaitItem())
+            }
+            assertEquals("975724", pin.pin)
+            assertEquals(false, pin.unlocked.value)
+        }
+
     /** A [PinViewModel] whose state is collected, as the screen does, once it knows whether a PIN is set. */
-    private fun TestScope.shownViewModel(): PinViewModel {
-        val viewModel = PinViewModel(pin = pin)
+    private fun TestScope.shownViewModel(mode: PinMode = PinMode.Unlock): PinViewModel {
+        val viewModel = PinViewModel(pin = pin, mode = mode)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
         advanceUntilIdle()
         return viewModel

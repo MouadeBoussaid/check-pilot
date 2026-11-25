@@ -2,24 +2,37 @@ package com.mebiad.checkpilot.ui.apps.pin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mebiad.checkpilot.domain.pin.ChangePinResult
 import com.mebiad.checkpilot.domain.pin.Pin
 import com.mebiad.checkpilot.domain.pin.PinCheck
 import com.mebiad.checkpilot.domain.pin.PinUsecase
 import com.mebiad.checkpilot.domain.pin.SetPinResult
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class PinStep { NewPin, Again, Enter }
+/** Unlock opens the Session list; Change replaces the PIN from Settings. */
+enum class PinMode { Unlock, Change }
+
+enum class PinStep { Current, NewPin, Again, Enter }
 
 enum class PinMessage { NotFourToSixDigits, Mismatch, Wrong }
 
+sealed interface PinEvent {
+    /** The PIN was changed from Settings. */
+    data object Changed : PinEvent
+}
+
 data class PinUiState(
+    val mode: PinMode = PinMode.Unlock,
     /** Null until it's known whether a PIN is set. */
     val step: PinStep? = null,
     val digitCount: Int = 0,
@@ -28,6 +41,8 @@ data class PinUiState(
 
 private data class Entry(
     val digits: String = "",
+    /** The current PIN, once [PinUsecase.verify] accepted it. */
+    val current: String? = null,
     /** The new PIN typed the first time, once it has 4 to 6 digits. */
     val firstPin: Pin? = null,
     val message: PinMessage? = null,
@@ -35,22 +50,28 @@ private data class Entry(
 
 class PinViewModel(
     private val pin: PinUsecase,
+    private val mode: PinMode,
 ) : ViewModel() {
     private val entry = MutableStateFlow(Entry())
+
+    private val mutableEvents = MutableSharedFlow<PinEvent>(extraBufferCapacity = 1)
+    val events: SharedFlow<PinEvent> = mutableEvents.asSharedFlow()
 
     val state: StateFlow<PinUiState> =
         combine(pin.isSet, entry) { isSet, entry ->
             PinUiState(
+                mode = mode,
                 step =
                     when {
-                        isSet -> PinStep.Enter
+                        isSet && mode == PinMode.Unlock -> PinStep.Enter
+                        isSet && entry.current == null -> PinStep.Current
                         entry.firstPin != null -> PinStep.Again
                         else -> PinStep.NewPin
                     },
                 digitCount = entry.digits.length,
                 message = entry.message
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), PinUiState())
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), PinUiState(mode = mode))
 
     /** The PIN being set or checked; the keypad does nothing until it's done. */
     private var checking: Job? = null
@@ -70,22 +91,30 @@ class PinViewModel(
                 Unit
             }
 
+            PinStep.Current -> {
+                checking =
+                    viewModelScope.launch {
+                        entry.value =
+                            when (pin.verify(typed.digits)) {
+                                PinCheck.Correct -> Entry(current = typed.digits)
+                                PinCheck.Wrong -> Entry(message = PinMessage.Wrong)
+                                PinCheck.LockedOut -> Entry()
+                            }
+                    }
+            }
+
             PinStep.NewPin -> {
                 val newPin = Pin.parse(typed.digits)
                 entry.value =
-                    if (newPin == null) Entry(message = PinMessage.NotFourToSixDigits) else Entry(firstPin = newPin)
+                    if (newPin == null) {
+                        Entry(current = typed.current, message = PinMessage.NotFourToSixDigits)
+                    } else {
+                        Entry(current = typed.current, firstPin = newPin)
+                    }
             }
 
             PinStep.Again -> {
-                checking =
-                    viewModelScope.launch {
-                        val firstPin = checkNotNull(typed.firstPin)
-                        entry.value =
-                            when (pin.set(firstPin, again = typed.digits)) {
-                                SetPinResult.Set -> Entry()
-                                SetPinResult.Mismatch -> Entry(firstPin = firstPin, message = PinMessage.Mismatch)
-                            }
-                    }
+                checking = viewModelScope.launch { if (mode == PinMode.Unlock) setPin(typed) else changePin(typed) }
             }
 
             PinStep.Enter -> {
@@ -98,6 +127,33 @@ class PinViewModel(
                                 PinCheck.LockedOut -> Entry()
                             }
                     }
+            }
+        }
+    }
+
+    private suspend fun setPin(typed: Entry) {
+        val firstPin = checkNotNull(typed.firstPin)
+        entry.value =
+            when (pin.set(firstPin, again = typed.digits)) {
+                SetPinResult.Set -> Entry()
+                SetPinResult.Mismatch -> Entry(firstPin = firstPin, message = PinMessage.Mismatch)
+            }
+    }
+
+    private suspend fun changePin(typed: Entry) {
+        val firstPin = checkNotNull(typed.firstPin)
+        when (pin.change(current = typed.current.orEmpty(), newPin = firstPin, again = typed.digits)) {
+            ChangePinResult.Changed -> {
+                entry.value = typed.copy(digits = "")
+                mutableEvents.emit(PinEvent.Changed)
+            }
+
+            ChangePinResult.Mismatch -> {
+                entry.value = typed.copy(digits = "", message = PinMessage.Mismatch)
+            }
+
+            ChangePinResult.Wrong, ChangePinResult.LockedOut -> {
+                entry.value = Entry(message = PinMessage.Wrong)
             }
         }
     }

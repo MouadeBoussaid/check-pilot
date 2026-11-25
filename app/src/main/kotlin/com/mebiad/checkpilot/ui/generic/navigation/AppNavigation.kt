@@ -18,6 +18,7 @@ import com.mebiad.checkpilot.domain.session.CrewMember
 import com.mebiad.checkpilot.ui.apps.capture.CaptureScreen
 import com.mebiad.checkpilot.ui.apps.debrief.DebriefScreen
 import com.mebiad.checkpilot.ui.apps.home.HomeScreen
+import com.mebiad.checkpilot.ui.apps.pin.PinMode
 import com.mebiad.checkpilot.ui.apps.pin.PinScreen
 import com.mebiad.checkpilot.ui.apps.sessions.SessionsScreen
 import com.mebiad.checkpilot.ui.apps.setup.SetupScreen
@@ -94,7 +95,10 @@ fun AppNavigation(onLockSessionList: () -> Unit) {
                             onDebrief = { sessionId, crewMember -> backStack.add(Debrief(sessionId, crewMember)) }
                         )
                     } else {
-                        PinScreen(viewModel = koinViewModel(), onBack = { backStack.removeLastOrNull() })
+                        PinScreen(
+                            viewModel = koinViewModel { parametersOf(PinMode.Unlock) },
+                            onBack = { backStack.removeLastOrNull() }
+                        )
                     }
                 }
                 entry<Capture> { key ->

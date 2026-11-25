@@ -114,6 +114,7 @@ private fun PinHeading(step: PinStep) {
         when (step) {
             PinStep.NewPin -> R.string.pin_new_subtitle
             PinStep.Again -> R.string.pin_again_subtitle
+            PinStep.Current -> R.string.pin_current_subtitle
             PinStep.Enter -> null
         }
     subtitle?.let {
