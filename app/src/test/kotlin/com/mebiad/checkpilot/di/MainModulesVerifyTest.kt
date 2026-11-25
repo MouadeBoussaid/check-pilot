@@ -3,6 +3,8 @@ package com.mebiad.checkpilot.di
 import android.content.Context
 import com.mebiad.checkpilot.domain.session.CrewMember
 import com.mebiad.checkpilot.ui.apps.debrief.DebriefViewModel
+import com.mebiad.checkpilot.ui.apps.pin.PinMode
+import com.mebiad.checkpilot.ui.apps.pin.PinViewModel
 import org.junit.Test
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.dsl.module
@@ -20,7 +22,11 @@ class MainModulesVerifyTest {
         // When / Then: verify() throws on a dependency no definition provides
         app.verify(
             extraTypes = listOf(Context::class),
-            injections = injectedParameters(definition<DebriefViewModel>(String::class, CrewMember::class))
+            injections =
+                injectedParameters(
+                    definition<DebriefViewModel>(String::class, CrewMember::class),
+                    definition<PinViewModel>(PinMode::class)
+                )
         )
     }
 }
