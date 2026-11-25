@@ -2,6 +2,7 @@ package com.mebiad.checkpilot.domain.pin
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.time.Instant
 
 class PinStoreFake : PinStore {
     private val hashState = MutableStateFlow<PinHash?>(null)
@@ -10,6 +11,14 @@ class PinStoreFake : PinStore {
         get() = hashState.value
 
     var attempts: Int = 0
+
+    private val lockedUntilState = MutableStateFlow<Instant?>(null)
+
+    var lockedUntil: Instant?
+        get() = lockedUntilState.value
+        set(value) {
+            lockedUntilState.value = value
+        }
 
     override fun observeHash(): Flow<PinHash?> = hashState
 
@@ -27,8 +36,20 @@ class PinStoreFake : PinStore {
         attempts = 0
     }
 
+    override fun observeLockedUntil(): Flow<Instant?> = lockedUntilState
+
+    override suspend fun lockOut(until: Instant) {
+        lockedUntil = until
+        attempts = 0
+    }
+
+    override suspend fun clear() {
+        reset()
+    }
+
     fun reset() {
         hashState.value = null
         attempts = 0
+        lockedUntil = null
     }
 }

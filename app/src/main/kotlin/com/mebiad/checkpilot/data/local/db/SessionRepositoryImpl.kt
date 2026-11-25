@@ -34,6 +34,8 @@ class SessionRepositoryImpl(
             ).map { rows -> rows.map { it.toSession() } }
 
     override suspend fun delete(id: String) = dao.delete(id)
+
+    override suspend fun deleteAll() = dao.deleteAll()
 }
 
 private fun Session.toEntity(): SessionEntity =

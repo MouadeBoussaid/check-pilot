@@ -236,6 +236,40 @@ class SessionRepositoryImplTest {
             assertEquals(1, grades.observe("kept").first().size)
         }
 
+    @Test
+    fun deletingEverySessionDeletesTheirNotesAndGradesAndLeavesNoLastSession() =
+        runTest {
+            // Given
+            val notes = NoteRepositoryImpl(dao = database.noteDao())
+            val grades = GradeRepositoryImpl(dao = database.gradeDao())
+            listOf("first", "second").forEach { id ->
+                repository.insert(session(id = id))
+                notes.insert(
+                    Note(
+                        id = "note-$id",
+                        sessionId = id,
+                        competencyId = 1,
+                        text = "Late gear",
+                        cmTag = CmTag.BOTH,
+                        observableBehaviourId = null,
+                        sortIndex = 0
+                    )
+                )
+                grades.set(sessionId = id, competencyId = 1, crewMember = CrewMember.CM1, grade = Grade.ADEQUATE)
+            }
+
+            // When
+            repository.deleteAll()
+
+            // Then
+            assertEquals(emptyList<Session>(), repository.search(SessionFilter()).first())
+            assertNull(repository.observeLast().first())
+            listOf("first", "second").forEach { id ->
+                assertEquals(emptyList<Note>(), notes.observe(id).first())
+                assertEquals(emptyList<CompetencyGrade>(), grades.observe(id).first())
+            }
+        }
+
     private fun session(
         id: String,
         createdAt: Instant = Instant.parse("2026-11-22T09:30:00Z"),

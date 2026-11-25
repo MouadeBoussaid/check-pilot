@@ -23,4 +23,7 @@ interface SessionRepository {
 
     /** Deletes the Session with [id], its Notes and its Grades. */
     suspend fun delete(id: String)
+
+    /** Deletes every Session, with their Notes and Grades. */
+    suspend fun deleteAll()
 }

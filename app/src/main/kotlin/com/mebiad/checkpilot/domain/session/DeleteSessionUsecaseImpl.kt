@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class DeleteSessionUsecaseImpl(
@@ -14,5 +15,9 @@ class DeleteSessionUsecaseImpl(
 
     override fun delete(sessionId: String) {
         scope.launch { repository.delete(sessionId) }
+    }
+
+    override suspend fun deleteAll() {
+        scope.async { repository.deleteAll() }.await()
     }
 }

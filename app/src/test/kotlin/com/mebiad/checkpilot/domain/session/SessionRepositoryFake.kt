@@ -46,6 +46,10 @@ class SessionRepositoryFake : SessionRepository {
         sessionsState.value = sessionsState.value.filterNot { it.id == id }
     }
 
+    override suspend fun deleteAll() {
+        sessionsState.value = emptyList()
+    }
+
     fun reset() {
         sessionsState.value = emptyList()
     }

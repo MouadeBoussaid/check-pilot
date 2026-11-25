@@ -78,6 +78,7 @@
 
     <string name="pin_set_title">Set a PIN</string>
     <string name="pin_enter_title">Enter PIN</string>
+    <string name="pin_current_subtitle">Type your current PIN</string>
     <string name="pin_new_subtitle">Type a new PIN for your saved Sessions</string>
     <string name="pin_again_subtitle">Type the new PIN again</string>
     <string name="pin_step_new">New PIN</string>
@@ -92,6 +93,24 @@
     <string name="pin_remove_last_digit">Remove the last digit</string>
     <string name="pin_confirm">Confirm</string>
     <string name="pin_start_over">Start over</string>
+    <string name="pin_change_title">Change PIN</string>
+    <string name="pin_lockout_reason">5 wrong PINs in a row.</string>
+    <plurals name="pin_lockout_wait">
+        <item quantity="one">Wait %1$d second to try again.</item>
+        <item quantity="other">Wait %1$d seconds to try again.</item>
+    </plurals>
+    <string name="pin_forgot">Forgot PIN</string>
+    <string name="pin_forgot_title">Forgot PIN?</string>
+    <!-- The dialog bolds pin_forgot_body_bold where it appears in pin_forgot_body. -->
+    <string name="pin_forgot_body">Starting over deletes all saved Sessions, including the Last Session. This can\'t be undone.</string>
+    <string name="pin_forgot_body_bold">all saved Sessions</string>
+    <string name="pin_forgot_hint">Your Catalogue is kept. You then set a new PIN.</string>
+    <string name="pin_forgot_delete">Delete all Sessions</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_pin">PIN</string>
+    <string name="settings_change_pin">Change PIN</string>
+    <string name="settings_change_pin_subtitle">Your current PIN, then the new one twice</string>
 
     <string name="sessions_title">Sessions</string>
     <string name="sessions_search_hint">Staff Number or airport</string>

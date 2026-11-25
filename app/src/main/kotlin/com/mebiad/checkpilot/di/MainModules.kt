@@ -115,7 +115,7 @@ val domainModule =
         single<PinStore> { PinStoreImpl(dataStore = get()) }
         single<PinHasher> { PinHasherImpl() }
         // One instance for the whole app: it holds the Session list's unlock in memory.
-        single<PinUsecase> { PinUsecaseImpl(store = get(), hasher = get()) }
+        single<PinUsecase> { PinUsecaseImpl(store = get(), hasher = get(), clock = get(), sessions = get()) }
     }
 
 val uiModule =
