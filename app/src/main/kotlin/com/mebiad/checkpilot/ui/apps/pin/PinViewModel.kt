@@ -95,6 +95,7 @@ class PinViewModel(
                             when (pin.check(typed.digits)) {
                                 PinCheck.Correct -> Entry()
                                 PinCheck.Wrong -> Entry(message = PinMessage.Wrong)
+                                PinCheck.LockedOut -> Entry()
                             }
                     }
             }

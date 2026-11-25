@@ -20,6 +20,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.time.Instant
 
 class PinStoreImplTest {
     @get:Rule
@@ -68,6 +69,43 @@ class PinStoreImplTest {
             // When / Then: a reset
             after.resetWrongAttempts()
             assertEquals(0, after.wrongAttempts())
+        }
+
+    @Test
+    fun aLockoutIsKeptAcrossARestartAndResetsTheWrongAttempts() =
+        runTest {
+            // Given
+            val file = File(folder.root, "settings.preferences_pb")
+            val before = PinStoreImpl(dataStore = openDataStore(file))
+            assertNull(before.observeLockedUntil().first())
+            repeat(5) { before.recordWrongAttempt() }
+
+            // When
+            before.lockOut(until = Instant.parse("2026-11-01T09:00:30Z"))
+            closeDataStores()
+            val after = PinStoreImpl(dataStore = openDataStore(file))
+
+            // Then
+            assertEquals(Instant.parse("2026-11-01T09:00:30Z"), after.observeLockedUntil().first())
+            assertEquals(0, after.wrongAttempts())
+        }
+
+    @Test
+    fun clearingForgetsTheHashTheWrongAttemptsAndTheLockout() =
+        runTest {
+            // Given
+            val store = PinStoreImpl(dataStore = openDataStore(File(folder.root, "settings.preferences_pb")))
+            store.writeHash(PinHash(hash = byteArrayOf(9, 8, 7), salt = byteArrayOf(1, 2), iterations = 120000))
+            store.lockOut(until = Instant.parse("2026-11-01T09:00:30Z"))
+            store.recordWrongAttempt()
+
+            // When
+            store.clear()
+
+            // Then
+            assertNull(store.observeHash().first())
+            assertNull(store.observeLockedUntil().first())
+            assertEquals(0, store.wrongAttempts())
         }
 
     private fun openDataStore(file: File): DataStore<Preferences> {

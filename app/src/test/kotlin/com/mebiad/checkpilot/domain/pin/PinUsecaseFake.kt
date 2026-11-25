@@ -27,6 +27,10 @@ class PinUsecaseFake : PinUsecase {
 
     override val unlocked: StateFlow<Boolean> = unlockedState
 
+    val secondsLeft = MutableStateFlow<Int?>(null)
+
+    override val lockoutSecondsLeft: Flow<Int?> = secondsLeft
+
     override suspend fun set(
         pin: Pin,
         again: String,
@@ -46,6 +50,39 @@ class PinUsecaseFake : PinUsecase {
         return PinCheck.Correct
     }
 
+    /** Each entry verified, in order. */
+    val verifications = mutableListOf<String>()
+
+    override suspend fun verify(entry: String): PinCheck {
+        verifications += entry
+        hold?.await()
+        if (secondsLeft.value != null) return PinCheck.LockedOut
+        return if (entry == pin) PinCheck.Correct else PinCheck.Wrong
+    }
+
+    override suspend fun change(
+        current: String,
+        newPin: Pin,
+        again: String,
+    ): ChangePinResult {
+        hold?.await()
+        if (again != newPin.digits) return ChangePinResult.Mismatch
+        if (pin != null && current != pin) return ChangePinResult.Wrong
+        pin = newPin.digits
+        return ChangePinResult.Changed
+    }
+
+    /** How many times the PIN was forgotten. */
+    var forgetCount: Int = 0
+
+    override suspend fun forget() {
+        forgetCount++
+        hold?.await()
+        pin = null
+        secondsLeft.value = null
+        lock()
+    }
+
     override fun lock() {
         unlockedState.value = false
     }
@@ -54,6 +91,9 @@ class PinUsecaseFake : PinUsecase {
         pin = null
         unlockedState.value = false
         checks.clear()
+        verifications.clear()
+        forgetCount = 0
+        secondsLeft.value = null
         hold = null
     }
 }
