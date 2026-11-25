@@ -28,6 +28,20 @@ class DeleteSessionUsecaseImplTest {
             assertEquals(listOf("kept"), repository.sessions.map { it.id })
         }
 
+    @Test
+    fun deletingEverySessionIsDoneWhenItReturns() =
+        runTest(dispatcher) {
+            // Given
+            repository.insert(session("first"))
+            repository.insert(session("second"))
+
+            // When
+            usecase.deleteAll()
+
+            // Then
+            assertEquals(emptyList<Session>(), repository.sessions)
+        }
+
     private fun session(id: String): Session =
         Session(
             id = id,
