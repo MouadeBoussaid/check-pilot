@@ -288,6 +288,68 @@ class PinViewModelTest {
             assertEquals(false, pin.unlocked.value)
         }
 
+    @Test
+    fun duringTheLockoutTheSecondsLeftShowAndTheKeypadDoesNothing() =
+        runTest {
+            // Given
+            pin.pin = "1234"
+            val viewModel = shownViewModel()
+            "12".forEach(viewModel::onDigit)
+
+            // When
+            pin.secondsLeft.value = 30
+            advanceUntilIdle()
+            viewModel.onDigit('3')
+            viewModel.onBackspace()
+            viewModel.onConfirm()
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(
+                PinUiState(step = PinStep.Enter, digitCount = 2, lockoutSecondsLeft = 30),
+                viewModel.state.value
+            )
+            assertEquals(emptyList<String>(), pin.checks)
+        }
+
+    @Test
+    fun forgotPinWarnsAndCancellingForgetsNothing() =
+        runTest {
+            // Given
+            pin.pin = "1234"
+            val viewModel = shownViewModel()
+
+            // When / Then: Forgot PIN shows the warning
+            viewModel.onForgotPin()
+            advanceUntilIdle()
+            assertEquals(true, viewModel.state.value.forgotPinWarning)
+
+            // When / Then: Cancel hides it and forgets nothing
+            viewModel.onCancelForgotPin()
+            advanceUntilIdle()
+            assertEquals(false, viewModel.state.value.forgotPinWarning)
+            assertEquals(0, pin.forgetCount)
+            assertEquals("1234", pin.pin)
+        }
+
+    @Test
+    fun confirmingForgotPinForgetsThePinAndAsksForANewOne() =
+        runTest {
+            // Given
+            pin.pin = "1234"
+            pin.secondsLeft.value = 30
+            val viewModel = shownViewModel()
+            viewModel.onForgotPin()
+
+            // When
+            viewModel.onConfirmForgotPin()
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(1, pin.forgetCount)
+            assertEquals(PinUiState(step = PinStep.NewPin), viewModel.state.value)
+        }
+
     /** A [PinViewModel] whose state is collected, as the screen does, once it knows whether a PIN is set. */
     private fun TestScope.shownViewModel(mode: PinMode = PinMode.Unlock): PinViewModel {
         val viewModel = PinViewModel(pin = pin, mode = mode)

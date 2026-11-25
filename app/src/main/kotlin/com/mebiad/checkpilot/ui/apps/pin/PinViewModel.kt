@@ -37,6 +37,10 @@ data class PinUiState(
     val step: PinStep? = null,
     val digitCount: Int = 0,
     val message: PinMessage? = null,
+    /** The seconds left before a PIN can be entered again; null while it can. */
+    val lockoutSecondsLeft: Int? = null,
+    /** The Forgot PIN warning shows, saying that every Session will be deleted. */
+    val forgotPinWarning: Boolean = false,
 )
 
 private data class Entry(
@@ -53,23 +57,27 @@ class PinViewModel(
     private val mode: PinMode,
 ) : ViewModel() {
     private val entry = MutableStateFlow(Entry())
+    private val forgotPinWarning = MutableStateFlow(false)
 
     private val mutableEvents = MutableSharedFlow<PinEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<PinEvent> = mutableEvents.asSharedFlow()
 
     val state: StateFlow<PinUiState> =
-        combine(pin.isSet, entry) { isSet, entry ->
+        combine(pin.isSet, entry, pin.lockoutSecondsLeft, forgotPinWarning) { isSet, entry, secondsLeft, warning ->
+            val step =
+                when {
+                    isSet && mode == PinMode.Unlock -> PinStep.Enter
+                    isSet && entry.current == null -> PinStep.Current
+                    entry.firstPin != null -> PinStep.Again
+                    else -> PinStep.NewPin
+                }
             PinUiState(
                 mode = mode,
-                step =
-                    when {
-                        isSet && mode == PinMode.Unlock -> PinStep.Enter
-                        isSet && entry.current == null -> PinStep.Current
-                        entry.firstPin != null -> PinStep.Again
-                        else -> PinStep.NewPin
-                    },
+                step = step,
                 digitCount = entry.digits.length,
-                message = entry.message
+                message = entry.message,
+                lockoutSecondsLeft = secondsLeft.takeIf { step == PinStep.Enter || step == PinStep.Current },
+                forgotPinWarning = warning
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), PinUiState(mode = mode))
 
@@ -77,14 +85,30 @@ class PinViewModel(
     private var checking: Job? = null
     private val isChecking: Boolean get() = checking?.isActive == true
 
+    private val isLockedOut: Boolean get() = state.value.lockoutSecondsLeft != null
+
     fun onDigit(digit: Char) = edit { copy(digits = digits + digit, message = null) }
 
     fun onBackspace() = edit { copy(digits = digits.dropLast(1)) }
 
     fun onStartOver() = edit { Entry() }
 
+    fun onForgotPin() {
+        forgotPinWarning.value = true
+    }
+
+    fun onConfirmForgotPin() {
+        forgotPinWarning.value = false
+        entry.value = Entry()
+        checking = viewModelScope.launch { pin.forget() }
+    }
+
+    fun onCancelForgotPin() {
+        forgotPinWarning.value = false
+    }
+
     fun onConfirm() {
-        if (isChecking) return
+        if (isChecking || isLockedOut) return
         val typed = entry.value
         when (state.value.step) {
             null -> {
@@ -159,7 +183,7 @@ class PinViewModel(
     }
 
     private fun edit(change: Entry.() -> Entry) {
-        if (!isChecking) entry.update(change)
+        if (!isChecking && !isLockedOut) entry.update(change)
     }
 
     private companion object {
