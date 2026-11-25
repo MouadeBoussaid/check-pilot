@@ -17,4 +17,10 @@ interface SessionRepository {
 
     /** Emits the Last Session: the latest created, the later insert winning a tie. Null while there is no Session. */
     fun observeLast(): Flow<Session?>
+
+    /** Emits the Sessions [filter] matches, newest date first, then latest created, again whenever they change. */
+    fun search(filter: SessionFilter): Flow<List<Session>>
+
+    /** Deletes the Session with [id], its Notes and its Grades. */
+    suspend fun delete(id: String)
 }

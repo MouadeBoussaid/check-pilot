@@ -13,4 +13,13 @@ interface GradeDao {
 
     @Query("SELECT * FROM grade WHERE sessionId = :sessionId")
     fun observe(sessionId: String): Flow<List<GradeEntity>>
+
+    @Query("SELECT sessionId, crewMember, COUNT(*) AS count FROM grade GROUP BY sessionId, crewMember")
+    fun observeGradedCounts(): Flow<List<GradedCountRow>>
 }
+
+data class GradedCountRow(
+    val sessionId: String,
+    val crewMember: String,
+    val count: Int,
+)

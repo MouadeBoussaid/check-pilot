@@ -15,6 +15,7 @@ import com.mebiad.checkpilot.data.local.db.CheckPilotDatabase
 import com.mebiad.checkpilot.data.local.db.GradeRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.NoteRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.SessionRepositoryImpl
+import com.mebiad.checkpilot.data.local.settings.PinStoreImpl
 import com.mebiad.checkpilot.domain.catalogue.CatalogueRepository
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecase
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecaseImpl
@@ -30,16 +31,27 @@ import com.mebiad.checkpilot.domain.note.EditNotesUsecaseImpl
 import com.mebiad.checkpilot.domain.note.NoteRepository
 import com.mebiad.checkpilot.domain.note.ObserveNotesUsecase
 import com.mebiad.checkpilot.domain.note.ObserveNotesUsecaseImpl
+import com.mebiad.checkpilot.domain.pin.PinHasher
+import com.mebiad.checkpilot.domain.pin.PinHasherImpl
+import com.mebiad.checkpilot.domain.pin.PinStore
+import com.mebiad.checkpilot.domain.pin.PinUsecase
+import com.mebiad.checkpilot.domain.pin.PinUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecase
 import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecaseImpl
+import com.mebiad.checkpilot.domain.session.DeleteSessionUsecase
+import com.mebiad.checkpilot.domain.session.DeleteSessionUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecase
 import com.mebiad.checkpilot.domain.session.ObserveSessionUsecaseImpl
+import com.mebiad.checkpilot.domain.session.SearchSessionsUsecase
+import com.mebiad.checkpilot.domain.session.SearchSessionsUsecaseImpl
 import com.mebiad.checkpilot.domain.session.SessionRepository
 import com.mebiad.checkpilot.domain.session.StartSessionUsecase
 import com.mebiad.checkpilot.domain.session.StartSessionUsecaseImpl
 import com.mebiad.checkpilot.ui.apps.capture.CaptureViewModel
 import com.mebiad.checkpilot.ui.apps.debrief.DebriefViewModel
 import com.mebiad.checkpilot.ui.apps.home.HomeViewModel
+import com.mebiad.checkpilot.ui.apps.pin.PinViewModel
+import com.mebiad.checkpilot.ui.apps.sessions.SessionsViewModel
 import com.mebiad.checkpilot.ui.apps.setup.SetupViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -98,6 +110,12 @@ val domainModule =
         single<ObserveDebriefUsecase> {
             ObserveDebriefUsecaseImpl(catalogue = get(), notes = get(), grades = get())
         }
+        single<SearchSessionsUsecase> { SearchSessionsUsecaseImpl(sessions = get(), grades = get(), catalogue = get()) }
+        single<DeleteSessionUsecase> { DeleteSessionUsecaseImpl(repository = get()) }
+        single<PinStore> { PinStoreImpl(dataStore = get()) }
+        single<PinHasher> { PinHasherImpl() }
+        // One instance for the whole app: it holds the Session list's unlock in memory.
+        single<PinUsecase> { PinUsecaseImpl(store = get(), hasher = get()) }
     }
 
 val uiModule =
@@ -106,6 +124,8 @@ val uiModule =
         viewModelOf(::SetupViewModel)
         viewModelOf(::CaptureViewModel)
         viewModelOf(::DebriefViewModel)
+        viewModelOf(::PinViewModel)
+        viewModelOf(::SessionsViewModel)
     }
 
 val mainModules = listOf(coreModule, dataModule, domainModule, uiModule)

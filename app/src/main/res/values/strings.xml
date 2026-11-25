@@ -76,6 +76,37 @@
     <string name="grade_minimum_acceptable_level">Minimum Acceptable Level</string>
     <string name="grade_not_yet_competent">Not Yet Competent</string>
 
+    <string name="pin_set_title">Set a PIN</string>
+    <string name="pin_enter_title">Enter PIN</string>
+    <string name="pin_new_subtitle">Type a new PIN for your saved Sessions</string>
+    <string name="pin_again_subtitle">Type the new PIN again</string>
+    <string name="pin_step_new">New PIN</string>
+    <string name="pin_step_confirm">Confirm</string>
+    <plurals name="pin_digit_count">
+        <item quantity="one">%1$d digit typed</item>
+        <item quantity="other">%1$d digits typed</item>
+    </plurals>
+    <string name="pin_hint_4_to_6_digits">A PIN has 4 to 6 digits.</string>
+    <string name="pin_mismatch">The PINs don\'t match.</string>
+    <string name="pin_wrong">The PIN is wrong.</string>
+    <string name="pin_remove_last_digit">Remove the last digit</string>
+    <string name="pin_confirm">Confirm</string>
+    <string name="pin_start_over">Start over</string>
+
+    <string name="sessions_title">Sessions</string>
+    <string name="sessions_search_hint">Staff Number or airport</string>
+    <string name="sessions_filter_by_date">Filter by date</string>
+    <string name="sessions_clear_date">Clear the date</string>
+    <string name="sessions_capture">Capture</string>
+    <string name="sessions_debrief">Debrief</string>
+    <string name="sessions_more_options">More options</string>
+    <string name="sessions_delete">Delete</string>
+    <string name="sessions_grade_count">%1$d/%2$d</string>
+    <string name="sessions_none_saved">No saved Session yet.</string>
+    <string name="sessions_none_found">No Session matches the search.</string>
+    <string name="sessions_delete_title">Delete this Session?</string>
+    <string name="sessions_delete_body">Its Notes and Grades are deleted with it. This can\'t be undone.</string>
+
     <string name="date_picker_title">Session date</string>
     <string name="date_picker_ok">OK</string>
     <string name="date_picker_cancel">Cancel</string>

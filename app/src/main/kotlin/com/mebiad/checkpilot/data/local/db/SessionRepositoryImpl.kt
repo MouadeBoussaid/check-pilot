@@ -4,6 +4,7 @@ import com.mebiad.checkpilot.data.local.db.dao.SessionDao
 import com.mebiad.checkpilot.data.local.db.entity.SessionEntity
 import com.mebiad.checkpilot.domain.session.AirportCode
 import com.mebiad.checkpilot.domain.session.Session
+import com.mebiad.checkpilot.domain.session.SessionFilter
 import com.mebiad.checkpilot.domain.session.SessionRepository
 import com.mebiad.checkpilot.domain.session.StaffNumber
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +24,16 @@ class SessionRepositoryImpl(
     override fun observe(id: String): Flow<Session?> = dao.observe(id).map { it?.toSession() }
 
     override fun observeLast(): Flow<Session?> = dao.observeLast().map { it?.toSession() }
+
+    override fun search(filter: SessionFilter): Flow<List<Session>> =
+        dao
+            .search(
+                staffNumberPrefix = filter.staffNumberPrefix,
+                airportPrefix = filter.airportPrefix,
+                date = filter.date
+            ).map { rows -> rows.map { it.toSession() } }
+
+    override suspend fun delete(id: String) = dao.delete(id)
 }
 
 private fun Session.toEntity(): SessionEntity =
