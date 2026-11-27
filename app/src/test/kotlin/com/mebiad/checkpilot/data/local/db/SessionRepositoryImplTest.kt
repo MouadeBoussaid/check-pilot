@@ -79,6 +79,46 @@ class SessionRepositoryImplTest {
         }
 
     @Test
+    fun aChangedStaffNumberIsObservedAndTheOtherSlotIsKept() =
+        runTest {
+            // Given
+            val session = session(id = "session-1", cm1 = "79152", cm2 = null)
+            repository.insert(session)
+
+            // When
+            repository.updateStaffNumber(
+                id = "session-1",
+                crewMember = CrewMember.CM1,
+                staffNumber = staffNumber("79125")
+            )
+            repository.updateStaffNumber(
+                id = "session-1",
+                crewMember = CrewMember.CM2,
+                staffNumber = staffNumber("04512")
+            )
+
+            // Then
+            assertEquals(
+                session.copy(cm1StaffNumber = staffNumber("79125"), cm2StaffNumber = staffNumber("04512")),
+                repository.observe("session-1").first()
+            )
+        }
+
+    @Test
+    fun aClearedStaffNumberEmptiesItsSlotOnly() =
+        runTest {
+            // Given
+            val session = session(id = "session-1", cm1 = "79125", cm2 = "04512")
+            repository.insert(session)
+
+            // When
+            repository.updateStaffNumber(id = "session-1", crewMember = CrewMember.CM1, staffNumber = null)
+
+            // Then
+            assertEquals(session.copy(cm1StaffNumber = null), repository.observe("session-1").first())
+        }
+
+    @Test
     fun anUnknownSessionIsObservedAsNull() =
         runTest {
             // Given: no Session saved
@@ -269,6 +309,8 @@ class SessionRepositoryImplTest {
                 assertEquals(emptyList<CompetencyGrade>(), grades.observe(id).first())
             }
         }
+
+    private fun staffNumber(digits: String): StaffNumber = checkNotNull(StaffNumber.parse(digits))
 
     private fun session(
         id: String,

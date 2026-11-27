@@ -11,6 +11,12 @@ interface GradeDao {
     @Upsert
     suspend fun upsert(grade: GradeEntity)
 
+    @Query("DELETE FROM grade WHERE sessionId = :sessionId AND crewMember = :crewMember")
+    suspend fun deleteOf(
+        sessionId: String,
+        crewMember: String,
+    )
+
     @Query("SELECT * FROM grade WHERE sessionId = :sessionId")
     fun observe(sessionId: String): Flow<List<GradeEntity>>
 
