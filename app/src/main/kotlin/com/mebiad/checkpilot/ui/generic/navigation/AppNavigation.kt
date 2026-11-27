@@ -131,6 +131,7 @@ fun AppNavigation(onLockSessionList: () -> Unit) {
                 entry<Capture> { key ->
                     CaptureScreen(
                         viewModel = koinViewModel { parametersOf(key.sessionId) },
+                        staffNumbersViewModel = koinViewModel { parametersOf(key.sessionId) },
                         onGenerateDebrief = { crewMember -> backStack.add(Debrief(key.sessionId, crewMember)) },
                         onDone = { backStack.removeAll { it != Home } }
                     )

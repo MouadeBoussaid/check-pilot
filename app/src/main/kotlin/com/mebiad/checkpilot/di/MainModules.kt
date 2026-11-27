@@ -40,6 +40,8 @@ import com.mebiad.checkpilot.domain.pin.PinUsecase
 import com.mebiad.checkpilot.domain.pin.PinUsecaseImpl
 import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecase
 import com.mebiad.checkpilot.domain.session.ChangeSessionDateUsecaseImpl
+import com.mebiad.checkpilot.domain.session.ChangeStaffNumbersUsecase
+import com.mebiad.checkpilot.domain.session.ChangeStaffNumbersUsecaseImpl
 import com.mebiad.checkpilot.domain.session.DeleteSessionUsecase
 import com.mebiad.checkpilot.domain.session.DeleteSessionUsecaseImpl
 import com.mebiad.checkpilot.domain.session.DuplicateSessionUsecase
@@ -52,6 +54,7 @@ import com.mebiad.checkpilot.domain.session.SessionRepository
 import com.mebiad.checkpilot.domain.session.StartSessionUsecase
 import com.mebiad.checkpilot.domain.session.StartSessionUsecaseImpl
 import com.mebiad.checkpilot.ui.apps.capture.CaptureViewModel
+import com.mebiad.checkpilot.ui.apps.capture.StaffNumbersViewModel
 import com.mebiad.checkpilot.ui.apps.catalogue.CatalogueViewModel
 import com.mebiad.checkpilot.ui.apps.debrief.DebriefViewModel
 import com.mebiad.checkpilot.ui.apps.home.HomeViewModel
@@ -120,6 +123,9 @@ val domainModule =
         single<SearchSessionsUsecase> { SearchSessionsUsecaseImpl(sessions = get(), grades = get(), catalogue = get()) }
         single<DeleteSessionUsecase> { DeleteSessionUsecaseImpl(repository = get()) }
         single<DuplicateSessionUsecase> { DuplicateSessionUsecaseImpl(repository = get(), clock = get()) }
+        single<ChangeStaffNumbersUsecase> {
+            ChangeStaffNumbersUsecaseImpl(sessions = get(), notes = get(), grades = get())
+        }
         single<PinStore> { PinStoreImpl(dataStore = get()) }
         single<PinHasher> { PinHasherImpl() }
         // One instance for the whole app: it holds the Session list's unlock in memory.
@@ -131,6 +137,7 @@ val uiModule =
         viewModelOf(::HomeViewModel)
         viewModelOf(::SetupViewModel)
         viewModelOf(::CaptureViewModel)
+        viewModelOf(::StaffNumbersViewModel)
         viewModelOf(::DebriefViewModel)
         viewModelOf(::PinViewModel)
         viewModelOf(::SessionsViewModel)
