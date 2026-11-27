@@ -21,6 +21,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -74,6 +75,7 @@ fun SessionsScreen(
         onDateClear = viewModel::onDateClear,
         onCapture = onCapture,
         onDebrief = onDebrief,
+        onDuplicate = viewModel::onDuplicate,
         onDeleteAsk = viewModel::onDeleteAsk,
         onDeleteConfirm = viewModel::onDeleteConfirm,
         onDeleteCancel = viewModel::onDeleteCancel
@@ -89,6 +91,7 @@ private fun SessionsContent(
     onDateClear: () -> Unit,
     onCapture: (sessionId: String) -> Unit,
     onDebrief: (sessionId: String, crewMember: CrewMember) -> Unit,
+    onDuplicate: (SessionSummary) -> Unit,
     onDeleteAsk: (SessionSummary) -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
@@ -110,6 +113,7 @@ private fun SessionsContent(
                 state = state,
                 onCapture = onCapture,
                 onDebrief = onDebrief,
+                onDuplicate = onDuplicate,
                 onDeleteAsk = onDeleteAsk
             )
         }
@@ -210,6 +214,7 @@ private fun SessionList(
     state: SessionsUiState,
     onCapture: (sessionId: String) -> Unit,
     onDebrief: (sessionId: String, crewMember: CrewMember) -> Unit,
+    onDuplicate: (SessionSummary) -> Unit,
     onDeleteAsk: (SessionSummary) -> Unit,
 ) {
     if (state.sessions.isEmpty()) {
@@ -232,6 +237,7 @@ private fun SessionList(
                 summary = summary,
                 onCapture = { onCapture(summary.session.id) },
                 onDebrief = { onDebrief(summary.session.id, summary.session.crewMembers.first()) },
+                onDuplicate = { onDuplicate(summary) },
                 onDelete = { onDeleteAsk(summary) }
             )
         }
@@ -243,6 +249,7 @@ private fun SessionCard(
     summary: SessionSummary,
     onCapture: () -> Unit,
     onDebrief: () -> Unit,
+    onDuplicate: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Card(
@@ -263,7 +270,7 @@ private fun SessionCard(
                 CardButton(text = stringResource(R.string.sessions_capture), onClick = onCapture)
                 CardButton(text = stringResource(R.string.sessions_debrief), onClick = onDebrief)
                 Spacer(modifier = Modifier.weight(1f))
-                MoreOptions(onDelete = onDelete)
+                MoreOptions(session = summary.session, onDuplicate = onDuplicate, onDelete = onDelete)
             }
         }
     }
@@ -347,7 +354,11 @@ private fun CardButton(
 }
 
 @Composable
-private fun MoreOptions(onDelete: () -> Unit) {
+private fun MoreOptions(
+    session: Session,
+    onDuplicate: () -> Unit,
+    onDelete: () -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }, modifier = Modifier.size(56.dp)) {
@@ -363,6 +374,14 @@ private fun MoreOptions(onDelete: () -> Unit) {
             containerColor = MaterialTheme.colorScheme.surfaceBright,
             border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline)
         ) {
+            DuplicateItem(
+                session = session,
+                onClick = {
+                    expanded = false
+                    onDuplicate()
+                }
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             DropdownMenuItem(
                 text = {
                     Text(
@@ -386,6 +405,40 @@ private fun MoreOptions(onDelete: () -> Unit) {
             )
         }
     }
+}
+
+@Composable
+private fun DuplicateItem(
+    session: Session,
+    onClick: () -> Unit,
+) {
+    val returnRoute =
+        listOf(session.destination.letters, stringResource(R.string.route_arrow), session.departure.letters)
+            .joinToString(" ")
+    DropdownMenuItem(
+        text = {
+            Column {
+                Text(
+                    text = stringResource(R.string.sessions_duplicate),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = stringResource(R.string.sessions_duplicate_detail, returnRoute),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        onClick = onClick,
+        leadingIcon = {
+            Icon(
+                painter = painterResource(R.drawable.ic_content_copy),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+    )
 }
 
 @Composable

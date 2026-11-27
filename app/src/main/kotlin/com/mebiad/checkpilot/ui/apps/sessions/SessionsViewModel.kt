@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mebiad.checkpilot.core.clock.Clock
 import com.mebiad.checkpilot.domain.pin.PinUsecase
 import com.mebiad.checkpilot.domain.session.DeleteSessionUsecase
+import com.mebiad.checkpilot.domain.session.DuplicateSessionUsecase
 import com.mebiad.checkpilot.domain.session.SearchSessionsUsecase
 import com.mebiad.checkpilot.domain.session.SessionSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,6 +34,7 @@ data class SessionsUiState(
 class SessionsViewModel(
     private val search: SearchSessionsUsecase,
     private val delete: DeleteSessionUsecase,
+    private val duplicate: DuplicateSessionUsecase,
     private val pin: PinUsecase,
     private val clock: Clock,
 ) : ViewModel() {
@@ -86,6 +88,10 @@ class SessionsViewModel(
 
     fun onDeleteCancel() {
         pendingDelete.value = null
+    }
+
+    fun onDuplicate(summary: SessionSummary) {
+        duplicate.duplicate(summary.session.id)
     }
 
     private companion object {

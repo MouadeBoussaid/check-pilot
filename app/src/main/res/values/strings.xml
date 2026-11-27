@@ -148,6 +148,9 @@
     <string name="sessions_debrief">Debrief</string>
     <string name="sessions_more_options">More options</string>
     <string name="sessions_delete">Delete</string>
+    <string name="sessions_duplicate">Duplicate</string>
+    <!-- %1$s is the return route, like "SLL → DOH". -->
+    <string name="sessions_duplicate_detail">New Session %1$s, today</string>
     <string name="sessions_grade_count">%1$d/%2$d</string>
     <string name="sessions_none_saved">No saved Session yet.</string>
     <string name="sessions_none_found">No Session matches the search.</string>
