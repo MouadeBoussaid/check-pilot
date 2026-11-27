@@ -17,6 +17,8 @@ import com.mebiad.checkpilot.data.local.db.NoteRepositoryImpl
 import com.mebiad.checkpilot.data.local.db.SessionRepositoryImpl
 import com.mebiad.checkpilot.data.local.settings.PinStoreImpl
 import com.mebiad.checkpilot.domain.catalogue.CatalogueRepository
+import com.mebiad.checkpilot.domain.catalogue.EditCatalogueUsecase
+import com.mebiad.checkpilot.domain.catalogue.EditCatalogueUsecaseImpl
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecase
 import com.mebiad.checkpilot.domain.catalogue.ObserveCatalogueUsecaseImpl
 import com.mebiad.checkpilot.domain.debrief.ObserveDebriefUsecase
@@ -48,6 +50,7 @@ import com.mebiad.checkpilot.domain.session.SessionRepository
 import com.mebiad.checkpilot.domain.session.StartSessionUsecase
 import com.mebiad.checkpilot.domain.session.StartSessionUsecaseImpl
 import com.mebiad.checkpilot.ui.apps.capture.CaptureViewModel
+import com.mebiad.checkpilot.ui.apps.catalogue.CatalogueViewModel
 import com.mebiad.checkpilot.ui.apps.debrief.DebriefViewModel
 import com.mebiad.checkpilot.ui.apps.home.HomeViewModel
 import com.mebiad.checkpilot.ui.apps.pin.PinViewModel
@@ -99,6 +102,8 @@ val domainModule =
         single<StartSessionUsecase> { StartSessionUsecaseImpl(repository = get(), clock = get()) }
         single<ObserveSessionUsecase> { ObserveSessionUsecaseImpl(repository = get()) }
         single<ObserveCatalogueUsecase> { ObserveCatalogueUsecaseImpl(repository = get()) }
+        // One writer for the whole app keeps every Catalogue edit in call order.
+        single<EditCatalogueUsecase> { EditCatalogueUsecaseImpl(repository = get()) }
         single<NoteRepository> { NoteRepositoryImpl(dao = get<CheckPilotDatabase>().noteDao()) }
         single<ObserveNotesUsecase> { ObserveNotesUsecaseImpl(repository = get()) }
         // One writer for the whole app keeps every Note write in call order.
@@ -126,6 +131,7 @@ val uiModule =
         viewModelOf(::DebriefViewModel)
         viewModelOf(::PinViewModel)
         viewModelOf(::SessionsViewModel)
+        viewModelOf(::CatalogueViewModel)
     }
 
 val mainModules = listOf(coreModule, dataModule, domainModule, uiModule)

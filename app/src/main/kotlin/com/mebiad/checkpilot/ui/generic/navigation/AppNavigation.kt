@@ -16,6 +16,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.mebiad.checkpilot.domain.pin.PinUsecase
 import com.mebiad.checkpilot.domain.session.CrewMember
 import com.mebiad.checkpilot.ui.apps.capture.CaptureScreen
+import com.mebiad.checkpilot.ui.apps.catalogue.CatalogueScreen
 import com.mebiad.checkpilot.ui.apps.debrief.DebriefScreen
 import com.mebiad.checkpilot.ui.apps.home.HomeScreen
 import com.mebiad.checkpilot.ui.apps.pin.PinMode
@@ -54,6 +55,9 @@ data object Settings : NavKey
 @Serializable
 data object ChangePin : NavKey
 
+@Serializable
+data object CatalogueEditor : NavKey
+
 /**
  * [onLockSessionList] runs whenever the Session list leaves the back stack and whenever the app goes to the background,
  * so the PIN is asked again the next time the list shows.
@@ -86,8 +90,12 @@ fun AppNavigation(onLockSessionList: () -> Unit) {
                 entry<Settings> {
                     SettingsScreen(
                         onBack = { backStack.removeLastOrNull() },
-                        onChangePin = { backStack.add(ChangePin) }
+                        onChangePin = { backStack.add(ChangePin) },
+                        onEditCatalogue = { backStack.add(CatalogueEditor) }
                     )
+                }
+                entry<CatalogueEditor> {
+                    CatalogueScreen(viewModel = koinViewModel(), onBack = { backStack.removeLastOrNull() })
                 }
                 entry<ChangePin> {
                     PinScreen(
