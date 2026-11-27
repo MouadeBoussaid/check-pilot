@@ -22,6 +22,21 @@ class SessionRepositoryFake : SessionRepository {
         sessionsState.value = sessionsState.value.map { if (it.id == id) it.copy(date = date) else it }
     }
 
+    override suspend fun updateStaffNumber(
+        id: String,
+        crewMember: CrewMember,
+        staffNumber: StaffNumber?,
+    ) {
+        sessionsState.value =
+            sessionsState.value.map {
+                when {
+                    it.id != id -> it
+                    crewMember == CrewMember.CM1 -> it.copy(cm1StaffNumber = staffNumber)
+                    else -> it.copy(cm2StaffNumber = staffNumber)
+                }
+            }
+    }
+
     override fun observe(id: String): Flow<Session?> = sessionsState.map { sessions -> sessions.find { it.id == id } }
 
     override fun observeLast(): Flow<Session?> =

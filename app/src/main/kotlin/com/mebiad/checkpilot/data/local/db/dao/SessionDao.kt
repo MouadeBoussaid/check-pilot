@@ -18,6 +18,18 @@ interface SessionDao {
         date: LocalDate,
     )
 
+    @Query("UPDATE session SET cm1StaffNumber = :staffNumber WHERE id = :id")
+    suspend fun updateCm1StaffNumber(
+        id: String,
+        staffNumber: String?,
+    )
+
+    @Query("UPDATE session SET cm2StaffNumber = :staffNumber WHERE id = :id")
+    suspend fun updateCm2StaffNumber(
+        id: String,
+        staffNumber: String?,
+    )
+
     @Query("SELECT * FROM session WHERE id = :id")
     fun observe(id: String): Flow<SessionEntity?>
 

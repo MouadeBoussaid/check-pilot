@@ -20,6 +20,14 @@ class GradeRepositoryFake : GradeRepository {
         gradesState.value += Triple(sessionId, competencyId, crewMember) to grade
     }
 
+    override suspend fun deleteOf(
+        sessionId: String,
+        crewMember: CrewMember,
+    ) {
+        gradesState.value =
+            gradesState.value.filterKeys { (session, _, member) -> session != sessionId || member != crewMember }
+    }
+
     override fun observe(sessionId: String): Flow<List<CompetencyGrade>> = gradesState.map { it.toGrades(sessionId) }
 
     override fun observeGradedCounts(): Flow<List<GradedCount>> =

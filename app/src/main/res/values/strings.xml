@@ -46,6 +46,24 @@
     <string name="capture_generate_debrief">Generate Debrief</string>
     <string name="capture_which_crew_member">Which Crew Member?</string>
     <string name="capture_crew_member_debrief">%1$s Debrief</string>
+    <string name="capture_add_crew_member">Add %1$s</string>
+    <string name="capture_edit_staff_number">Edit Staff Number</string>
+    <string name="capture_edit_staff_number_hint">Correct a typo, or remove this Crew Member.</string>
+    <string name="capture_add_staff_number">Add Staff Number</string>
+    <string name="capture_add_staff_number_hint">4 to 6 digits.</string>
+    <string name="capture_remove_crew_member">Remove %1$s</string>
+    <string name="capture_remove_crew_member_question">Remove %1$s?</string>
+    <string name="capture_remove_crew_member_and_grades">Remove %1$s and Grades</string>
+    <string name="capture_save">Save</string>
+    <string name="capture_grades_progress">Grades %1$d/%2$d</string>
+    <plurals name="capture_notes_tagged">
+        <item quantity="one">%1$d Note is tagged %2$s. Retag the Notes tagged %2$s first.</item>
+        <item quantity="other">%1$d Notes are tagged %2$s. Retag the Notes tagged %2$s first.</item>
+    </plurals>
+    <plurals name="capture_grades_will_be_deleted">
+        <item quantity="one">%2$s\'s %1$d Grade will be deleted. No Note is tagged %2$s, so the Notes stay as they are.</item>
+        <item quantity="other">%2$s\'s %1$d Grades will be deleted. No Note is tagged %2$s, so the Notes stay as they are.</item>
+    </plurals>
     <string name="cancel">Cancel</string>
 
     <string name="debrief_title">Debrief</string>

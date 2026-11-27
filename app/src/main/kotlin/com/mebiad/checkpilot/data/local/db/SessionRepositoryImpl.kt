@@ -3,6 +3,7 @@ package com.mebiad.checkpilot.data.local.db
 import com.mebiad.checkpilot.data.local.db.dao.SessionDao
 import com.mebiad.checkpilot.data.local.db.entity.SessionEntity
 import com.mebiad.checkpilot.domain.session.AirportCode
+import com.mebiad.checkpilot.domain.session.CrewMember
 import com.mebiad.checkpilot.domain.session.Session
 import com.mebiad.checkpilot.domain.session.SessionFilter
 import com.mebiad.checkpilot.domain.session.SessionRepository
@@ -20,6 +21,15 @@ class SessionRepositoryImpl(
         id: String,
         date: LocalDate,
     ) = dao.updateDate(id, date)
+
+    override suspend fun updateStaffNumber(
+        id: String,
+        crewMember: CrewMember,
+        staffNumber: StaffNumber?,
+    ) = when (crewMember) {
+        CrewMember.CM1 -> dao.updateCm1StaffNumber(id, staffNumber?.digits)
+        CrewMember.CM2 -> dao.updateCm2StaffNumber(id, staffNumber?.digits)
+    }
 
     override fun observe(id: String): Flow<Session?> = dao.observe(id).map { it?.toSession() }
 

@@ -12,6 +12,13 @@ interface SessionRepository {
         date: LocalDate,
     )
 
+    /** Sets or, when [staffNumber] is null, clears the [crewMember] slot of the Session with [id]. */
+    suspend fun updateStaffNumber(
+        id: String,
+        crewMember: CrewMember,
+        staffNumber: StaffNumber?,
+    )
+
     /** Emits the Session with [id], or null while there is none. */
     fun observe(id: String): Flow<Session?>
 

@@ -12,6 +12,12 @@ interface GradeRepository {
         grade: Grade,
     )
 
+    /** Deletes every Grade the Crew Member has in the Session. */
+    suspend fun deleteOf(
+        sessionId: String,
+        crewMember: CrewMember,
+    )
+
     /** Emits the Session's Grades, again whenever they change. */
     fun observe(sessionId: String): Flow<List<CompetencyGrade>>
 

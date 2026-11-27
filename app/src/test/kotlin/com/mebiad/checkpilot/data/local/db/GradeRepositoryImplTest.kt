@@ -80,6 +80,31 @@ class GradeRepositoryImplTest {
         }
 
     @Test
+    fun deletingACrewMembersGradesLeavesTheOtherCrewMemberAndSessionsAlone() =
+        runTest {
+            // Given
+            sessions.insert(session("session-1"))
+            sessions.insert(session("session-2"))
+            repository.set("session-1", competencyId = 1, crewMember = CrewMember.CM1, grade = Grade.ADEQUATE)
+            repository.set("session-1", competencyId = 1, crewMember = CrewMember.CM2, grade = Grade.EFFECTIVE)
+            repository.set("session-1", competencyId = 2, crewMember = CrewMember.CM2, grade = Grade.NOT_OBSERVED)
+            repository.set("session-2", competencyId = 1, crewMember = CrewMember.CM2, grade = Grade.EXEMPLARY)
+
+            // When
+            repository.deleteOf(sessionId = "session-1", crewMember = CrewMember.CM2)
+
+            // Then
+            assertEquals(
+                listOf(CompetencyGrade(competencyId = 1, crewMember = CrewMember.CM1, grade = Grade.ADEQUATE)),
+                repository.observe("session-1").first()
+            )
+            assertEquals(
+                listOf(CompetencyGrade(competencyId = 1, crewMember = CrewMember.CM2, grade = Grade.EXEMPLARY)),
+                repository.observe("session-2").first()
+            )
+        }
+
+    @Test
     fun theGradedCountsArePerSessionAndCrewMember() =
         runTest {
             // Given

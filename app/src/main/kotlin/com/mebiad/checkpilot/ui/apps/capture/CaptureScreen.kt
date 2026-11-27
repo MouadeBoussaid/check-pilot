@@ -96,10 +96,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun CaptureScreen(
     viewModel: CaptureViewModel,
+    staffNumbersViewModel: StaffNumbersViewModel,
     onGenerateDebrief: (CrewMember) -> Unit,
     onDone: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val staffNumbersState by staffNumbersViewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val noteErased = stringResource(R.string.capture_note_erased)
     val noteMoved = stringResource(R.string.capture_note_moved)
@@ -124,8 +126,17 @@ fun CaptureScreen(
         onCmTagSelect = viewModel::onCmTagSelect,
         onObservableBehaviourSelect = viewModel::onObservableBehaviourSelect,
         onMoveField = viewModel::onMoveField,
+        onEditStaffNumber = staffNumbersViewModel::onEdit,
         onGenerateDebrief = onGenerateDebrief,
         onDone = onDone
+    )
+    StaffNumberDialogs(
+        state = staffNumbersState,
+        onTextChange = staffNumbersViewModel::onTextChange,
+        onSave = staffNumbersViewModel::onSave,
+        onRemove = staffNumbersViewModel::onRemove,
+        onConfirmRemoval = staffNumbersViewModel::onConfirmRemoval,
+        onDismiss = staffNumbersViewModel::onDismiss
     )
 }
 
@@ -139,6 +150,7 @@ private fun CaptureContent(
     onCmTagSelect: (key: String, cmTag: CmTag) -> Unit,
     onObservableBehaviourSelect: (key: String, observableBehaviourId: Long?) -> Unit,
     onMoveField: (key: String, competencyId: Long) -> Unit,
+    onEditStaffNumber: (CrewMember) -> Unit,
     onGenerateDebrief: (CrewMember) -> Unit,
     onDone: () -> Unit,
 ) {
@@ -158,7 +170,7 @@ private fun CaptureContent(
             RouteHeader(session = session)
             // A plain scrolling Column, not a lazy list: a Note scrolled off screen must keep its focus.
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                StaffNumberChips(session = session)
+                StaffNumberChips(session = session, onEdit = onEditStaffNumber)
                 state.competencies.forEachIndexed { index, competencyNotes ->
                     val competencyId = competencyNotes.competency.id
                     CompetencyHeader(
@@ -462,15 +474,25 @@ private fun RouteHeader(session: Session) {
     }
 }
 
+/** A chip per Crew Member that opens the editing of their Staff Number, and one that adds the missing Crew Member. */
 @Composable
-private fun StaffNumberChips(session: Session) {
+private fun StaffNumberChips(
+    session: Session,
+    onEdit: (CrewMember) -> Unit,
+) {
     Column {
         Row(
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            session.cm1StaffNumber?.let { StaffNumberChip(slot = CrewMemberSlot.CM1, staffNumber = it) }
-            session.cm2StaffNumber?.let { StaffNumberChip(slot = CrewMemberSlot.CM2, staffNumber = it) }
+            CrewMember.entries.forEach { crewMember ->
+                val staffNumber = session.staffNumberOf(crewMember)
+                if (staffNumber == null) {
+                    AddCrewMemberChip(slot = crewMember.slot, onClick = { onEdit(crewMember) })
+                } else {
+                    StaffNumberChip(slot = crewMember.slot, staffNumber = staffNumber, onClick = { onEdit(crewMember) })
+                }
+            }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
@@ -784,12 +806,16 @@ private fun Modifier.dashedBorder(
 private fun StaffNumberChip(
     slot: CrewMemberSlot,
     staffNumber: StaffNumber,
+    onClick: () -> Unit,
 ) {
     Row(
         modifier =
             Modifier
+                .clip(MaterialTheme.shapes.large)
                 .border(width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = MaterialTheme.shapes.large)
                 .background(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.large)
+                .clickable(onClickLabel = stringResource(R.string.capture_edit_staff_number), onClick = onClick)
+                .heightIn(min = 48.dp)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -801,6 +827,37 @@ private fun StaffNumberChip(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(text = staffNumber.digits, style = CheckPilotTheme.monoTypography.extraSmall)
+    }
+}
+
+@Composable
+private fun AddCrewMemberChip(
+    slot: CrewMemberSlot,
+    onClick: () -> Unit,
+) {
+    val shape = MaterialTheme.shapes.large
+    Row(
+        modifier =
+            Modifier
+                .clip(shape)
+                .dashedBorder(color = MaterialTheme.colorScheme.outline, shape = shape)
+                .clickable(onClick = onClick)
+                .heightIn(min = 48.dp)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_add),
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = stringResource(R.string.capture_add_crew_member, stringResource(slot.label)),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

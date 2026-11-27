@@ -27,6 +27,11 @@ class GradeRepositoryImpl(
         )
     )
 
+    override suspend fun deleteOf(
+        sessionId: String,
+        crewMember: CrewMember,
+    ) = dao.deleteOf(sessionId, crewMember.name)
+
     override fun observe(sessionId: String): Flow<List<CompetencyGrade>> =
         dao.observe(sessionId).map { rows -> rows.map { it.toCompetencyGrade() } }
 
