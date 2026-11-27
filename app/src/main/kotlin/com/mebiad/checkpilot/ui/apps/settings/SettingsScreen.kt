@@ -27,6 +27,7 @@ import com.mebiad.checkpilot.ui.generic.components.BackTopBar
 fun SettingsScreen(
     onBack: () -> Unit,
     onChangePin: () -> Unit,
+    onEditCatalogue: () -> Unit,
 ) {
     Scaffold(
         topBar = { BackTopBar(title = stringResource(R.string.settings_title), onBack = onBack) }
@@ -45,6 +46,13 @@ fun SettingsScreen(
                 title = R.string.settings_change_pin,
                 subtitle = R.string.settings_change_pin_subtitle,
                 onClick = onChangePin
+            )
+            SectionTitle(R.string.settings_catalogue)
+            SettingsRow(
+                icon = R.drawable.ic_list,
+                title = R.string.settings_edit_catalogue,
+                subtitle = R.string.settings_edit_catalogue_subtitle,
+                onClick = onEditCatalogue
             )
         }
     }

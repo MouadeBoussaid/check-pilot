@@ -111,6 +111,34 @@
     <string name="settings_pin">PIN</string>
     <string name="settings_change_pin">Change PIN</string>
     <string name="settings_change_pin_subtitle">Your current PIN, then the new one twice</string>
+    <string name="settings_catalogue">Catalogue</string>
+    <string name="settings_edit_catalogue">Edit the Catalogue</string>
+    <string name="settings_edit_catalogue_subtitle">The Competencies and their OBS BEH</string>
+
+    <string name="catalogue_title">Catalogue</string>
+    <string name="catalogue_add_competency">Competency</string>
+    <string name="catalogue_add_obs_beh">OBS BEH</string>
+    <string name="catalogue_expand">Expand</string>
+    <string name="catalogue_collapse">Collapse</string>
+    <string name="catalogue_rename">Rename</string>
+    <string name="catalogue_delete">Delete</string>
+    <string name="catalogue_move_up">Move up</string>
+    <string name="catalogue_move_down">Move down</string>
+    <string name="catalogue_drag_handle">Drag to reorder</string>
+    <plurals name="catalogue_used_in_sessions">
+        <item quantity="one">used in %1$d Session</item>
+        <item quantity="other">used in %1$d Sessions</item>
+    </plurals>
+    <plurals name="catalogue_obs_beh_count">
+        <item quantity="one">%1$d OBS BEH</item>
+        <item quantity="other">%1$d OBS BEH</item>
+    </plurals>
+    <string name="catalogue_new_competency">New Competency</string>
+    <string name="catalogue_rename_competency">Rename the Competency</string>
+    <string name="catalogue_new_obs_beh">New OBS BEH</string>
+    <string name="catalogue_rename_obs_beh">Rename the OBS BEH</string>
+    <string name="catalogue_name">Name</string>
+    <string name="catalogue_save">Save</string>
 
     <string name="sessions_title">Sessions</string>
     <string name="sessions_search_hint">Staff Number or airport</string>

@@ -1,5 +1,6 @@
 package com.mebiad.checkpilot.ui.generic.components
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,6 +20,7 @@ fun BackTopBar(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
         title = { Text(text = title, style = MaterialTheme.typography.headlineSmall) },
@@ -31,6 +33,7 @@ fun BackTopBar(
                 )
             }
         },
+        actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
     )
 }
