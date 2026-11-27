@@ -4,6 +4,7 @@ import com.mebiad.checkpilot.core.clock.ClockFake
 import com.mebiad.checkpilot.domain.pin.PinUsecaseFake
 import com.mebiad.checkpilot.domain.session.AirportCode
 import com.mebiad.checkpilot.domain.session.DeleteSessionUsecaseFake
+import com.mebiad.checkpilot.domain.session.DuplicateSessionUsecaseFake
 import com.mebiad.checkpilot.domain.session.SearchSessionsUsecaseFake
 import com.mebiad.checkpilot.domain.session.Session
 import com.mebiad.checkpilot.domain.session.SessionSummary
@@ -32,6 +33,7 @@ class SessionsViewModelTest {
     private val pin = PinUsecaseFake()
     private val search = SearchSessionsUsecaseFake()
     private val delete = DeleteSessionUsecaseFake()
+    private val duplicate = DuplicateSessionUsecaseFake()
     private val clock = ClockFake()
 
     @Test
@@ -169,6 +171,22 @@ class SessionsViewModelTest {
             assertNull(viewModel.state.value.pendingDelete)
         }
 
+    @Test
+    fun duplicatingDuplicatesThatSessionAtOnce() =
+        runTest {
+            // Given
+            val a = summary("a")
+            search.setResults("", null, listOf(summary("b"), a))
+            val viewModel = shownUnlockedViewModel()
+
+            // When
+            viewModel.onDuplicate(a)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(listOf("a"), duplicate.duplicated)
+        }
+
     private suspend fun TestScope.shownUnlockedViewModel(): SessionsViewModel {
         pin.pin = "1234"
         pin.check("1234")
@@ -176,7 +194,8 @@ class SessionsViewModelTest {
     }
 
     private fun TestScope.shownViewModel(): SessionsViewModel {
-        val viewModel = SessionsViewModel(search = search, delete = delete, pin = pin, clock = clock)
+        val viewModel =
+            SessionsViewModel(search = search, delete = delete, duplicate = duplicate, pin = pin, clock = clock)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
         advanceUntilIdle()
         return viewModel
