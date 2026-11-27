@@ -75,6 +75,11 @@ class AppHarness : ExternalResource() {
         launch()
     }
 
+    /** Presses the system back button, or makes the back gesture. */
+    fun pressBack() {
+        activeScenario().onActivity { it.onBackPressedDispatcher.onBackPressed() }
+    }
+
     fun sendToBackground() {
         activeScenario().moveToState(Lifecycle.State.CREATED)
         waitForProcessLifecycle()
@@ -82,6 +87,15 @@ class AppHarness : ExternalResource() {
 
     fun bringToForeground() {
         activeScenario().moveToState(Lifecycle.State.RESUMED)
+    }
+
+    /**
+     * Lets [duration] pass for the app: the [clock] moves on, and so does the main looper, so timers the screens run
+     * on it fire.
+     */
+    fun passTime(duration: Duration) {
+        clock.advanceBy(duration)
+        shadowOf(Looper.getMainLooper()).idleFor(duration)
     }
 
     inline fun <reified T : Any> get(): T = GlobalContext.get().get()

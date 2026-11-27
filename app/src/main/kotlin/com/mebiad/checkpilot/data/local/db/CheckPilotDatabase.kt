@@ -6,6 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteOpenHelper
+import com.mebiad.checkpilot.data.local.db.dao.CompetencyDao
+import com.mebiad.checkpilot.data.local.db.dao.GradeDao
+import com.mebiad.checkpilot.data.local.db.dao.NoteDao
+import com.mebiad.checkpilot.data.local.db.dao.SessionDao
 import com.mebiad.checkpilot.data.local.db.entity.CompetencyEntity
 import com.mebiad.checkpilot.data.local.db.entity.GradeEntity
 import com.mebiad.checkpilot.data.local.db.entity.NoteEntity
@@ -25,6 +29,14 @@ import com.mebiad.checkpilot.data.local.db.entity.SessionEntity
 )
 @TypeConverters(Converters::class)
 abstract class CheckPilotDatabase : RoomDatabase() {
+    abstract fun sessionDao(): SessionDao
+
+    abstract fun competencyDao(): CompetencyDao
+
+    abstract fun noteDao(): NoteDao
+
+    abstract fun gradeDao(): GradeDao
+
     companion object {
         const val FILE_NAME = "check-pilot.db"
 

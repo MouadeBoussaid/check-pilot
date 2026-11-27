@@ -1,3 +1,181 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Check Pilot</string>
+
+    <string name="back">Back</string>
+    <string name="route_arrow">→</string>
+
+    <string name="home_new_session">New Session</string>
+    <string name="home_open_session">Open Session</string>
+    <string name="home_settings">Settings</string>
+    <string name="home_last_session">Last Session</string>
+    <string name="home_continue_last_session">Continue last Session</string>
+
+    <string name="setup_title">New Session</string>
+    <string name="setup_crew_members">Crew Members</string>
+    <!-- CM1 is the glossary's name for the first Crew Member slot, not a typo of "CM!". -->
+    <string name="crew_member_1" tools:ignore="Typos">CM1</string>
+    <string name="crew_member_2">CM2</string>
+    <string name="crew_member_both">BOTH</string>
+    <string name="setup_staff_number_placeholder">Staff Number</string>
+    <string name="setup_staff_number_hint">At least one Staff Number, 4 to 6 digits. Either slot may stay empty.</string>
+    <string name="setup_route">Route</string>
+    <string name="setup_from">From</string>
+    <string name="setup_to">To</string>
+    <string name="setup_date">Date</string>
+    <string name="setup_change_date">Change the date</string>
+    <string name="setup_start">Start</string>
+    <string name="setup_no_staff_number">At least one Staff Number is required.</string>
+    <string name="setup_staff_number_not_4_to_6_digits">A Staff Number has 4 to 6 digits.</string>
+    <string name="setup_airport_code_missing">Both airport codes are required.</string>
+    <string name="setup_airport_code_not_3_letters">An airport code is 3 letters.</string>
+
+    <string name="capture_add_note">Add Note</string>
+    <string name="capture_delete_note">Delete Note</string>
+    <string name="capture_note_erased">Note erased</string>
+    <string name="capture_note_moved">Note moved</string>
+    <string name="capture_move_note">Move Note</string>
+    <string name="capture_move_note_to">Move Note to</string>
+    <string name="capture_move_note_quote">“%1$s”</string>
+    <string name="capture_move_note_link_removed">It\'s linked to OBS BEH %1$s. The link is removed when it moves.</string>
+    <string name="capture_move_note_now_here">Now here</string>
+    <string name="capture_done">Done</string>
+    <string name="capture_obs_beh">OBS BEH</string>
+    <string name="capture_obs_beh_none">None</string>
+    <string name="undo">Undo</string>
+    <string name="close">Close</string>
+    <string name="capture_generate_debrief">Generate Debrief</string>
+    <string name="capture_which_crew_member">Which Crew Member?</string>
+    <string name="capture_crew_member_debrief">%1$s Debrief</string>
+    <string name="capture_add_crew_member">Add %1$s</string>
+    <string name="capture_edit_staff_number">Edit Staff Number</string>
+    <string name="capture_edit_staff_number_hint">Correct a typo, or remove this Crew Member.</string>
+    <string name="capture_add_staff_number">Add Staff Number</string>
+    <string name="capture_add_staff_number_hint">4 to 6 digits.</string>
+    <string name="capture_remove_crew_member">Remove %1$s</string>
+    <string name="capture_remove_crew_member_question">Remove %1$s?</string>
+    <string name="capture_remove_crew_member_and_grades">Remove %1$s and Grades</string>
+    <string name="capture_save">Save</string>
+    <string name="capture_grades_progress">Grades %1$d/%2$d</string>
+    <plurals name="capture_notes_tagged">
+        <item quantity="one">%1$d Note is tagged %2$s. Retag the Notes tagged %2$s first.</item>
+        <item quantity="other">%1$d Notes are tagged %2$s. Retag the Notes tagged %2$s first.</item>
+    </plurals>
+    <plurals name="capture_grades_will_be_deleted">
+        <item quantity="one">%2$s\'s %1$d Grade will be deleted. No Note is tagged %2$s, so the Notes stay as they are.</item>
+        <item quantity="other">%2$s\'s %1$d Grades will be deleted. No Note is tagged %2$s, so the Notes stay as they are.</item>
+    </plurals>
+    <string name="cancel">Cancel</string>
+
+    <string name="debrief_title">Debrief</string>
+    <string name="debrief_change_date">Change the date</string>
+    <plurals name="debrief_grades_set">
+        <item quantity="one">%1$d of %2$d Grade set</item>
+        <item quantity="other">%1$d of %2$d Grades set</item>
+    </plurals>
+    <string name="debrief_obs_beh_count">%1$d OBS BEH</string>
+    <string name="debrief_show_notes">Show Notes</string>
+    <string name="debrief_select_grade">Select Grade</string>
+    <string name="debrief_no_obs_beh">No OBS BEH</string>
+    <string name="debrief_stay">Stay</string>
+    <string name="debrief_leave">Leave</string>
+    <plurals name="debrief_note_count">
+        <item quantity="one">%1$d Note</item>
+        <item quantity="other">%1$d Notes</item>
+    </plurals>
+    <plurals name="debrief_competencies_without_grade">
+        <item quantity="one">%1$d Competency has no Grade</item>
+        <item quantity="other">%1$d Competencies have no Grade</item>
+    </plurals>
+
+    <string name="grade_not_observed">Not Observed</string>
+    <string name="grade_exemplary">Exemplary</string>
+    <string name="grade_effective">Effective</string>
+    <string name="grade_adequate">Adequate</string>
+    <string name="grade_minimum_acceptable_level">Minimum Acceptable Level</string>
+    <string name="grade_not_yet_competent">Not Yet Competent</string>
+
+    <string name="pin_set_title">Set a PIN</string>
+    <string name="pin_enter_title">Enter PIN</string>
+    <string name="pin_current_subtitle">Type your current PIN</string>
+    <string name="pin_new_subtitle">Type a new PIN for your saved Sessions</string>
+    <string name="pin_again_subtitle">Type the new PIN again</string>
+    <string name="pin_step_new">New PIN</string>
+    <string name="pin_step_confirm">Confirm</string>
+    <plurals name="pin_digit_count">
+        <item quantity="one">%1$d digit typed</item>
+        <item quantity="other">%1$d digits typed</item>
+    </plurals>
+    <string name="pin_hint_4_to_6_digits">A PIN has 4 to 6 digits.</string>
+    <string name="pin_mismatch">The PINs don\'t match.</string>
+    <string name="pin_wrong">The PIN is wrong.</string>
+    <string name="pin_remove_last_digit">Remove the last digit</string>
+    <string name="pin_confirm">Confirm</string>
+    <string name="pin_start_over">Start over</string>
+    <string name="pin_change_title">Change PIN</string>
+    <string name="pin_lockout_reason">5 wrong PINs in a row.</string>
+    <plurals name="pin_lockout_wait">
+        <item quantity="one">Wait %1$d second to try again.</item>
+        <item quantity="other">Wait %1$d seconds to try again.</item>
+    </plurals>
+    <string name="pin_forgot">Forgot PIN</string>
+    <string name="pin_forgot_title">Forgot PIN?</string>
+    <!-- The dialog bolds pin_forgot_body_bold where it appears in pin_forgot_body. -->
+    <string name="pin_forgot_body">Starting over deletes all saved Sessions, including the Last Session. This can\'t be undone.</string>
+    <string name="pin_forgot_body_bold">all saved Sessions</string>
+    <string name="pin_forgot_hint">Your Catalogue is kept. You then set a new PIN.</string>
+    <string name="pin_forgot_delete">Delete all Sessions</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_pin">PIN</string>
+    <string name="settings_change_pin">Change PIN</string>
+    <string name="settings_change_pin_subtitle">Your current PIN, then the new one twice</string>
+    <string name="settings_catalogue">Catalogue</string>
+    <string name="settings_edit_catalogue">Edit the Catalogue</string>
+    <string name="settings_edit_catalogue_subtitle">The Competencies and their OBS BEH</string>
+
+    <string name="catalogue_title">Catalogue</string>
+    <string name="catalogue_add_competency">Competency</string>
+    <string name="catalogue_add_obs_beh">OBS BEH</string>
+    <string name="catalogue_expand">Expand</string>
+    <string name="catalogue_collapse">Collapse</string>
+    <string name="catalogue_rename">Rename</string>
+    <string name="catalogue_delete">Delete</string>
+    <string name="catalogue_move_up">Move up</string>
+    <string name="catalogue_move_down">Move down</string>
+    <string name="catalogue_drag_handle">Drag to reorder</string>
+    <plurals name="catalogue_used_in_sessions">
+        <item quantity="one">used in %1$d Session</item>
+        <item quantity="other">used in %1$d Sessions</item>
+    </plurals>
+    <plurals name="catalogue_obs_beh_count">
+        <item quantity="one">%1$d OBS BEH</item>
+        <item quantity="other">%1$d OBS BEH</item>
+    </plurals>
+    <string name="catalogue_new_competency">New Competency</string>
+    <string name="catalogue_rename_competency">Rename the Competency</string>
+    <string name="catalogue_new_obs_beh">New OBS BEH</string>
+    <string name="catalogue_rename_obs_beh">Rename the OBS BEH</string>
+    <string name="catalogue_name">Name</string>
+    <string name="catalogue_save">Save</string>
+
+    <string name="sessions_title">Sessions</string>
+    <string name="sessions_search_hint">Staff Number or airport</string>
+    <string name="sessions_filter_by_date">Filter by date</string>
+    <string name="sessions_clear_date">Clear the date</string>
+    <string name="sessions_capture">Capture</string>
+    <string name="sessions_debrief">Debrief</string>
+    <string name="sessions_more_options">More options</string>
+    <string name="sessions_delete">Delete</string>
+    <string name="sessions_duplicate">Duplicate</string>
+    <!-- %1$s is the return route, like "SLL → DOH". -->
+    <string name="sessions_duplicate_detail">New Session %1$s, today</string>
+    <string name="sessions_grade_count">%1$d/%2$d</string>
+    <string name="sessions_none_saved">No saved Session yet.</string>
+    <string name="sessions_none_found">No Session matches the search.</string>
+    <string name="sessions_delete_title">Delete this Session?</string>
+    <string name="sessions_delete_body">Its Notes and Grades are deleted with it. This can\'t be undone.</string>
+
+    <string name="date_picker_title">Session date</string>
+    <string name="date_picker_ok">OK</string>
+    <string name="date_picker_cancel">Cancel</string>
 </resources>
